@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login Admin | 3GFood</title>
+    <title>Register Admin | 3GFood</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css'])
@@ -45,7 +45,7 @@
         }
         .brand p { color: #94a3b8; font-size: 14px; margin-top: 6px; }
 
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; }
         .form-control {
             width: 100%;
@@ -60,13 +60,10 @@
         }
         .form-control:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); background: rgba(15, 23, 42, 0.8); }
         .form-control::placeholder { color: #475569; }
-
-        .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; font-size: 13px; color: #94a3b8; }
-        .form-options label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .form-options input[type="checkbox"] { accent-color: #10b981; width: 16px; height: 16px; cursor: pointer; }
         
         .btn-submit {
             width: 100%;
+            margin-top: 12px;
             padding: 14px;
             background: linear-gradient(135deg, #10b981, #059669);
             color: #fff;
@@ -100,7 +97,7 @@
     <div class="auth-container">
         <div class="brand">
             <h1>3G<span>Food</span></h1>
-            <p>Admin Dashboard Portal</p>
+            <p>Admin Registration</p>
         </div>
 
         @if($errors->any())
@@ -109,11 +106,16 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('admin.login.submit') }}">
+        <form method="POST" action="{{ route('admin.register.submit') }}">
             @csrf
             <div class="form-group">
+                <label for="name">Full Name</label>
+                <input id="name" name="name" type="text" class="form-control" value="{{ old('name') }}" placeholder="John Doe" required autofocus>
+            </div>
+
+            <div class="form-group">
                 <label for="email">Email Address</label>
-                <input id="email" name="email" type="email" class="form-control" value="{{ old('email') }}" placeholder="admin@3gfood.com" required autofocus>
+                <input id="email" name="email" type="email" class="form-control" value="{{ old('email') }}" placeholder="admin@3gfood.com" required>
             </div>
             
             <div class="form-group">
@@ -121,15 +123,17 @@
                 <input id="password" name="password" type="password" class="form-control" placeholder="••••••••" required>
             </div>
 
-            <div class="form-options">
-                <label>
-                    <input type="checkbox" name="remember"> Remember me
-                </label>
+            <div class="form-group">
+                <label for="password_confirmation">Confirm Password</label>
+                <input id="password_confirmation" name="password_confirmation" type="password" class="form-control" placeholder="••••••••" required>
             </div>
 
-            <button type="submit" class="btn-submit">Sign In to Dashboard</button>
+            <button type="submit" class="btn-submit">Register Account</button>
         </form>
 
+        <div class="auth-footer">
+            Sudah punya akun? <a href="{{ route('login') }}">Masuk di sini</a>
+        </div>
     </div>
 </body>
 </html>

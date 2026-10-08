@@ -1,15 +1,16 @@
 <IfModule mod_rewrite.c>
     Options -MultiViews -Indexes
     RewriteEngine On
-    RewriteBase /web_penjualan/
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect to public folder
+    # Explicitly route project-root requests to the Laravel public entry point.
+    # This is required for XAMPP installations where the app lives in a subfolder such as
+    # /web_penjualan and not at the Apache document root itself.
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/index.php [L,QSA]
+    RewriteCond %{REQUEST_URI} !^/web_penjualan/public/ [NC]
+    RewriteRule ^ /web_penjualan/public/index.php [L,QSA]
 </IfModule>

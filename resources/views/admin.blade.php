@@ -4,11 +4,11 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Admin | 3GFood</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css'])
     <style>
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:#f0f2f5;color:#1a1a2e;font:14px 'DM Sans',sans-serif;min-height:100vh}
+        body{background:#f8fafc;color:#1e293b;font:14px 'Inter',sans-serif;min-height:100vh}
         a{text-decoration:none;color:inherit}
         input,select,textarea,button{font:inherit}
 
@@ -16,134 +16,144 @@
         .adm-shell{display:flex;min-height:100vh}
 
         /* === SIDEBAR === */
-        .adm-sidebar{width:240px;background:#1a1a2e;color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
-        .adm-logo{padding:26px 24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-        .adm-logo-name{font:800 20px 'Playfair Display',serif;color:#fff}
-        .adm-logo-name em{color:#f97316;font-style:normal}
-        .adm-logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
-        .adm-nav{padding:18px 14px;flex:1}
-        .adm-nav-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.35);margin:16px 10px 8px;text-transform:uppercase}
-        .adm-nav-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.65);font-weight:500;margin-bottom:2px;cursor:pointer;transition:all .2s;font-size:13px}
-        .adm-nav-link svg{width:17px;height:17px;stroke-width:1.8;flex-shrink:0}
-        .adm-nav-link:hover,.adm-nav-link.active{background:rgba(249,115,22,.18);color:#f97316}
-        .adm-nav-link.active{font-weight:700}
-        .adm-nav-badge{margin-left:auto;background:#f97316;color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:2px 7px;min-width:20px;text-align:center}
-        .adm-sidebar-footer{padding:16px 14px;border-top:1px solid rgba(255,255,255,.08)}
-        .adm-sidebar-footer form button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,.12);color:#f87171;border:0;cursor:pointer;font-weight:600;font-size:13px;transition:background .2s}
-        .adm-sidebar-footer form button:hover{background:rgba(239,68,68,.25)}
+        .adm-sidebar{width:250px;background:#0f172a;color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid #1e293b}
+        .adm-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.05)}
+        .adm-logo-name{font:800 22px 'Outfit',sans-serif;color:#fff;letter-spacing:-0.5px}
+        .adm-logo-name em{color:#10b981;font-style:normal}
+        .adm-logo-sub{font-size:11px;color:#94a3b8;margin-top:4px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600}
+        .adm-nav{padding:20px 14px;flex:1}
+        .adm-nav-label{font-size:10px;font-weight:700;letter-spacing:1px;color:#64748b;margin:16px 10px 10px;text-transform:uppercase}
+        .adm-nav-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:#cbd5e1;font-weight:500;margin-bottom:4px;cursor:pointer;transition:all .2s;font-size:13px}
+        .adm-nav-link svg{width:18px;height:18px;stroke-width:2;flex-shrink:0;opacity:0.7}
+        .adm-nav-link:hover,.adm-nav-link.active{background:rgba(16,185,129,.15);color:#10b981}
+        .adm-nav-link:hover svg,.adm-nav-link.active svg{opacity:1}
+        .adm-nav-link.active{font-weight:600;background:linear-gradient(to right, rgba(16,185,129,.15), transparent); border-left: 3px solid #10b981;}
+        .adm-nav-badge{margin-left:auto;background:#10b981;color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:2px 8px;min-width:20px;text-align:center;box-shadow: 0 0 10px rgba(16,185,129,.4)}
+        .adm-sidebar-footer{padding:20px 14px;border-top:1px solid rgba(255,255,255,.05)}
+        .adm-sidebar-footer form button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,.1);color:#f87171;border:0;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s}
+        .adm-sidebar-footer form button:hover{background:rgba(239,68,68,.2);color:#fca5a5}
 
         /* === MAIN CONTENT === */
         .adm-main{flex:1;display:flex;flex-direction:column;min-width:0}
-        .adm-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-        .adm-topbar-title{font:700 17px 'Playfair Display',serif;color:#1a1a2e}
+        .adm-topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 32px;height:70px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.02)}
+        .adm-topbar-title{font:800 20px 'Outfit',sans-serif;color:#0f172a;letter-spacing:-0.5px}
         .adm-topbar-right{display:flex;align-items:center;gap:12px}
-        .adm-store-link{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#fff4ed;color:#f97316;border-radius:8px;font-size:12px;font-weight:700;border:1px solid #fed7aa}
-        .adm-store-link svg{width:14px;height:14px}
-        .adm-content{padding:24px 28px;flex:1}
+        .adm-store-link{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#ecfdf5;color:#059669;border-radius:99px;font-size:13px;font-weight:600;border:1px solid #a7f3d0;transition:all .2s}
+        .adm-store-link:hover{background:#d1fae5;}
+        .adm-store-link svg{width:16px;height:16px;stroke-width:2}
+        .adm-content{padding:32px;flex:1}
 
         /* === SUCCESS FLASH === */
-        .adm-flash{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:13px 18px;margin-bottom:20px;font-weight:600;font-size:13px}
+        .adm-flash{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;border-radius:12px;padding:16px 20px;margin-bottom:24px;font-weight:500;font-size:13px;box-shadow:0 4px 6px -1px rgba(16,185,129,.1)}
 
         /* === METRIC CARDS === */
-        .adm-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
-        .adm-metric{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid #f1f5f9;transition:box-shadow .2s}
-        .adm-metric:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
-        .adm-metric-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
-        .adm-metric-icon svg{width:20px;height:20px;stroke-width:1.8}
-        .adm-metric-val{font:700 26px 'Playfair Display',serif;color:#1a1a2e;line-height:1}
-        .adm-metric-label{font-size:12px;color:#64748b;margin-top:6px;font-weight:500}
-        .ic-orange{background:#fff4ed}.ic-orange svg{stroke:#f97316}
+        .adm-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-bottom:32px}
+        .adm-metric{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid #e2e8f0;transition:all .2s;position:relative;overflow:hidden}
+        .adm-metric::after{content:'';position:absolute;top:0;right:0;width:100px;height:100px;background:radial-gradient(circle, rgba(0,0,0,.03) 0%, transparent 70%);border-radius:50%;transform:translate(30%,-30%)}
+        .adm-metric:hover{box-shadow:0 10px 25px -5px rgba(0,0,0,.05),0 8px 10px -6px rgba(0,0,0,.01);transform:translateY(-2px)}
+        .adm-metric-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+        .adm-metric-icon svg{width:24px;height:24px;stroke-width:2}
+        .adm-metric-val{font:800 28px 'Outfit',sans-serif;color:#0f172a;line-height:1}
+        .adm-metric-label{font-size:13px;color:#64748b;margin-top:8px;font-weight:500}
+        .ic-orange{background:#ecfdf5}.ic-orange svg{stroke:#10b981}
         .ic-blue{background:#eff6ff}.ic-blue svg{stroke:#3b82f6}
         .ic-green{background:#f0fdf4}.ic-green svg{stroke:#22c55e}
-        .ic-purple{background:#faf5ff}.ic-purple svg{stroke:#a855f7}
+        .ic-purple{background:#f5f3ff}.ic-purple svg{stroke:#8b5cf6}
         .ic-red{background:#fef2f2}.ic-red svg{stroke:#ef4444}
 
         /* === SECTION CARDS === */
-        .adm-card{background:#fff;border-radius:14px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid #f1f5f9;margin-bottom:22px}
-        .adm-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-        .adm-card-title{font:700 17px 'Playfair Display',serif;color:#1a1a2e}
-        .adm-card-sub{font-size:12px;color:#94a3b8;margin-top:2px}
+        .adm-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid #e2e8f0;margin-bottom:24px}
+        .adm-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+        .adm-card-title{font:800 18px 'Outfit',sans-serif;color:#0f172a}
+        .adm-card-sub{font-size:13px;color:#64748b;margin-top:4px}
 
         /* === STATUS TABS === */
-        .adm-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
-        .adm-tab{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;background:#f1f5f9;color:#64748b;border:0;cursor:pointer;transition:all .2s}
-        .adm-tab.active,.adm-tab:hover{background:#f97316;color:#fff}
+        .adm-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;background:#f1f5f9;padding:6px;border-radius:12px;width:max-content}
+        .adm-tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:#64748b;border:0;cursor:pointer;transition:all .2s;background:transparent}
+        .adm-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+        .adm-tab:not(.active):hover{color:#334155;background:rgba(255,255,255,.5)}
         a.adm-tab{display:inline-block}
 
         /* === ORDERS TABLE === */
         .adm-table{width:100%;border-collapse:collapse}
-        .adm-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid #f1f5f9}
-        .adm-table td{padding:13px 14px;border-bottom:1px solid #f8fafc;vertical-align:top;font-size:13px}
+        .adm-table th{text-align:left;padding:12px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+        .adm-table th:first-child{border-top-left-radius:10px}
+        .adm-table th:last-child{border-top-right-radius:10px}
+        .adm-table td{padding:16px;border-bottom:1px solid #f1f5f9;vertical-align:top;font-size:14px}
         .adm-table tr:last-child td{border-bottom:0}
-        .adm-table tr:hover td{background:#fafafa}
-        .adm-badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700}
+        .adm-table tr:hover td{background:#f8fafc}
+        .adm-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600}
         .badge-wait{background:#fef3c7;color:#92400e}
         .badge-ok{background:#d1fae5;color:#065f46}
-        .badge-cash{background:#eff6ff;color:#1d4ed8}
-        .badge-bank{background:#fdf4ff;color:#7e22ce}
-        .badge-digital{background:#f0fdfa;color:#134e4a}
+        .badge-cash{background:#f1f5f9;color:#475569}
+        .badge-bank{background:#eff6ff;color:#1e40af}
+        .badge-digital{background:#f3e8ff;color:#6b21a8}
 
         /* === ACTION BUTTONS === */
-        .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f97316;color:#fff;border:0;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;transition:background .2s}
-        .btn-primary:hover{background:#ea6c0c}
-        .btn-danger{background:#ef4444;color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer}
-        .btn-danger:hover{background:#dc2626}
-        .btn-ghost{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:#f1f5f9;color:#475569;border:0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;transition:background .2s}
-        .btn-ghost:hover{background:#e2e8f0}
-        .btn-wa{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:#22c55e;color:#fff;border-radius:7px;font-size:11px;font-weight:700;margin-top:4px}
-        .btn-receipt{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:#fff4ed;color:#f97316;border-radius:7px;font-size:11px;font-weight:700;margin-top:4px;margin-left:4px;border:1px solid #fed7aa}
-        .btn-confirm{padding:7px 12px;background:#f97316;color:#fff;border:0;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;margin-top:6px;width:100%}
-        .btn-confirm:hover{background:#ea6c0c}
-        .btn-confirm-sm{padding:5px 10px;background:#f97316;color:#fff;border:0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer}
-        .btn-paid{padding:5px 10px;background:#22c55e;color:#fff;border:0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:4px}
+        .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;background:linear-gradient(135deg, #10b981, #059669);color:#fff;border:0;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;box-shadow:0 4px 6px -1px rgba(16,185,129,.2)}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 8px -1px rgba(16,185,129,.3)}
+        .btn-danger{background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+        .btn-danger:hover{background:#fee2e2;color:#dc2626}
+        .btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;background:#f1f5f9;color:#475569;border:0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s}
+        .btn-ghost:hover{background:#e2e8f0;color:#1e293b}
+        
+        .btn-wa{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#22c55e;color:#fff;border-radius:8px;font-size:12px;font-weight:600;margin-top:6px;box-shadow:0 2px 4px rgba(34,197,94,.2)}
+        .btn-receipt{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;color:#0f172a;border-radius:8px;font-size:12px;font-weight:600;margin-top:6px;border:1px solid #e2e8f0;transition:all .2s}
+        .btn-receipt:hover{background:#f8fafc;border-color:#cbd5e1}
+        
+        .btn-confirm{padding:8px 14px;background:#10b981;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;width:100%;transition:all .2s;box-shadow:0 2px 4px rgba(16,185,129,.2)}
+        .btn-confirm:hover{background:#059669}
+        .btn-confirm-sm{padding:6px 12px;background:#10b981;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
+        .btn-paid{padding:6px 12px;background:#22c55e;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px}
 
         /* === FORMS === */
-        .adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-        .adm-form-group{display:flex;flex-direction:column;gap:6px}
-        .adm-form-group label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
-        .adm-form-group input,.adm-form-group select,.adm-form-group textarea{padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;transition:border .2s}
-        .adm-form-group input:focus,.adm-form-group select:focus,.adm-form-group textarea:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
-        .adm-form-group textarea{min-height:80px;resize:vertical}
-        .adm-form-actions{display:flex;gap:8px;margin-top:14px}
+        .adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+        .adm-form-group{display:flex;flex-direction:column;gap:8px}
+        .adm-form-group label{font-size:12px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.5px}
+        .adm-form-group input,.adm-form-group select,.adm-form-group textarea{padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;background:#fff;transition:all .2s;color:#1e293b}
+        .adm-form-group input:focus,.adm-form-group select:focus,.adm-form-group textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+        .adm-form-group textarea{min-height:100px;resize:vertical}
+        .adm-form-actions{display:flex;gap:10px;margin-top:20px}
 
         /* === ACCORDION CATEGORIES === */
-        .adm-cat-details{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:12px}
-        .adm-cat-summary{padding:14px 18px;background:#fffbf7;display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;font-weight:700;color:#1a1a2e;font-size:14px;user-select:none}
+        .adm-cat-details{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+        .adm-cat-summary{padding:16px 20px;background:#f8fafc;display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none;font-weight:600;color:#0f172a;font-size:15px;user-select:none;transition:background .2s}
+        .adm-cat-summary:hover{background:#f1f5f9}
         .adm-cat-summary::-webkit-details-marker{display:none}
         .adm-cat-summary::marker{display:none}
-        .adm-cat-icon{width:32px;height:32px;background:#fff4ed;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-        .adm-cat-count{margin-left:auto;background:#f97316;color:#fff;border-radius:99px;font-size:11px;padding:2px 8px;font-weight:700}
-        .adm-cat-details[open] .adm-cat-summary{border-bottom:1px solid #e2e8f0;border-radius:0}
-        .adm-cat-arrow{transition:transform .2s;margin-left:4px;color:#94a3b8}
+        .adm-cat-icon{width:36px;height:36px;background:#ecfdf5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+        .adm-cat-count{margin-left:auto;background:#e2e8f0;color:#475569;border-radius:99px;font-size:12px;padding:4px 10px;font-weight:600}
+        .adm-cat-details[open] .adm-cat-summary{border-bottom:1px solid #e2e8f0;background:#fff}
+        .adm-cat-arrow{transition:transform .2s;margin-left:8px;color:#94a3b8}
         .adm-cat-details[open] .adm-cat-arrow{transform:rotate(90deg)}
 
         /* === COURIER GRID === */
-        .adm-courier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
-        .adm-courier-card{background:#fafafa;border:1px solid #e2e8f0;border-radius:12px;padding:18px}
-        .adm-courier-name{font:700 16px 'Playfair Display',serif;margin-bottom:4px}
-        .adm-courier-phone{font-size:12px;color:#64748b;margin-bottom:10px}
-        .adm-courier-stat{display:inline-flex;align-items:center;gap:5px;background:#fff4ed;color:#f97316;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-bottom:12px}
-        .adm-courier-actions{display:flex;gap:6px;flex-wrap:wrap}
-        .adm-courier-edit-form{display:none;margin-top:12px;padding:14px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+        .adm-courier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:16px}
+        .adm-courier-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.02);transition:transform .2s}
+        .adm-courier-card:hover{transform:translateY(-2px);box-shadow:0 4px 6px -1px rgba(0,0,0,.05)}
+        .adm-courier-name{font:800 18px 'Outfit',sans-serif;margin-bottom:6px;color:#0f172a}
+        .adm-courier-phone{font-size:14px;color:#64748b;margin-bottom:16px}
+        .adm-courier-stat{display:inline-flex;align-items:center;gap:6px;background:#ecfdf5;color:#059669;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600;margin-bottom:20px}
+        .adm-courier-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .adm-courier-edit-form{display:none;margin-top:16px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px}
 
         /* === PAYOUT TABLE === */
-        .adm-payout-table{width:100%;border-collapse:collapse;font-size:13px}
-        .adm-payout-table th{text-align:left;padding:8px 12px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;border-bottom:2px solid #f1f5f9}
-        .adm-payout-table td{padding:10px 12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+        .adm-payout-table{width:100%;border-collapse:collapse;font-size:14px}
+        .adm-payout-table th{text-align:left;padding:12px 16px;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+        .adm-payout-table td{padding:16px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
 
         /* === REPORTS === */
-        .adm-report-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}
-        .adm-report-title{font:700 28px/1.15 'Playfair Display',serif;color:#1a1a2e}
-        .adm-report-description{font-size:13px;color:#64748b;margin-top:6px}
-        .adm-report-filter{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px}
-        .adm-report-filter .adm-form-group{min-width:150px}
-        .adm-report-filter label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
-        .adm-report-filter input{padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff}
-        .adm-report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
-        .adm-report-stat{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;min-height:104px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-        .adm-report-stat-label{font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-        .adm-report-stat-value{font:700 23px 'Playfair Display',serif;color:#1a1a2e;margin-top:8px}
-        .adm-report-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);gap:18px;align-items:start}
+        .adm-report-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:32px}
+        .adm-report-title{font:800 32px/1.2 'Outfit',sans-serif;color:#0f172a;letter-spacing:-0.5px}
+        .adm-report-description{font-size:14px;color:#64748b;margin-top:8px}
+        .adm-report-filter{display:flex;align-items:end;gap:16px;flex-wrap:wrap;padding:20px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.02)}
+        .adm-report-filter .adm-form-group{min-width:160px}
+        .adm-report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:32px}
+        .adm-report-stat{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.02);position:relative;overflow:hidden}
+        .adm-report-stat::before{content:'';position:absolute;left:0;top:0;width:4px;height:100%;background:#10b981}
+        .adm-report-stat-label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+        .adm-report-stat-value{font:800 28px 'Outfit',sans-serif;color:#0f172a;margin-top:10px}
+        .adm-report-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:24px;align-items:start}
         .adm-report-layout .adm-card{margin-bottom:0}
 
         /* === TABS (section switching) === */
@@ -151,27 +161,26 @@
         .adm-section.active{display:block}
 
         @media(max-width:900px){
-            .adm-sidebar{width:64px}
+            .adm-sidebar{width:70px}
             .adm-logo-sub,.adm-nav-label,.adm-nav-link span,.adm-nav-badge,.adm-sidebar-footer form button span{display:none}
             .adm-logo-name{font-size:0}
-            .adm-logo{padding:18px 14px}
-            .adm-nav-link{justify-content:center;padding:12px 8px}
-            .adm-sidebar-footer form button{justify-content:center;padding:10px 8px}
+            .adm-logo{padding:20px 14px}
+            .adm-nav-link{justify-content:center;padding:14px 10px}
+            .adm-sidebar-footer form button{justify-content:center;padding:14px 10px}
             .adm-metrics{grid-template-columns:repeat(3,1fr)}
-            .adm-courier-grid{grid-template-columns:1fr}
+            .adm-report-grid{grid-template-columns:1fr 1fr}
         }
         @media(max-width:600px){
-            .adm-content{padding:16px 14px}
-            .adm-topbar{padding:0 14px}
+            .adm-content{padding:20px 16px}
+            .adm-topbar{padding:0 16px}
             .adm-metrics{grid-template-columns:1fr 1fr}
             .adm-form-grid{grid-template-columns:1fr}
             .adm-table{display:block;overflow-x:auto;white-space:nowrap}
-            .adm-report-grid{grid-template-columns:1fr 1fr}
             .adm-report-layout{grid-template-columns:1fr}
             .adm-report-filter{align-items:stretch;flex-direction:column}
             .adm-report-filter .btn-primary{justify-content:center}
-            .adm-report-header{display:block;margin-bottom:16px}
-            .adm-report-title{font-size:24px}
+            .adm-report-header{display:block;margin-bottom:20px}
+            .adm-report-title{font-size:26px}
         }
     </style>
 </head>
@@ -206,6 +215,14 @@
                 <span>Kurir</span>
                 @if($couriers->count() > 0)<span class="adm-nav-badge">{{ $couriers->count() }}</span>@endif
             </a>
+            <a class="adm-nav-link {{ $navSection === 'vouchers' ? 'active' : '' }}" href="{{ route('admin.dashboard') }}?section=vouchers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18v10H3z"/><path d="M7 7V5h10v2M9 12h6"/></svg>
+                <span>Voucher</span>
+            </a>
+            <a class="adm-nav-link {{ $navSection === 'settings' ? 'active' : '' }}" href="{{ route('admin.dashboard') }}?section=settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 01-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.21 1.14V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1-.6 1.7 1.7 0 00-1.14.21l-.09.06a2 2 0 01-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.14-.21H2.77a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00.6-1 1.7 1.7 0 00-.21-1.14l-.06-.09a2 2 0 012.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.21-1.14V2.77a2 2 0 014 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001 .6 1.7 1.7 0 001.14-.21l.09-.06a2 2 0 012.83 2.83l-.06.06A1.7 1.7 0 0019.4 9c.25.25.6.41 1 .4h.09a2 2 0 010 4h-.09a1.7 1.7 0 00-1 .4 1.7 1.7 0 00-.4 1z"/></svg>
+                <span>Toko</span>
+            </a>
             <a class="adm-nav-link {{ $navSection === 'payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard') }}?section=payouts">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 <span>Pencairan</span>
@@ -215,6 +232,10 @@
                 <span>Laporan</span>
             </a>
             <div class="adm-nav-label" style="margin-top:24px">Lainnya</div>
+            <a class="adm-nav-link" href="{{ route('register') }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                <span>Tambah Admin</span>
+            </a>
             <a class="adm-nav-link" href="{{ url('/') }}" target="_blank">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <span>Lihat Toko</span>
@@ -239,6 +260,8 @@
                 @if($navSection === 'orders') Manajemen Pesanan
                 @elseif($navSection === 'menu') Kelola Menu
                 @elseif($navSection === 'couriers') Data Kurir
+                @elseif($navSection === 'vouchers') Kelola Voucher
+                @elseif($navSection === 'settings') Pengaturan Toko
                 @elseif($navSection === 'payouts') Pencairan Kurir
                 @elseif($navSection === 'reports') Laporan Penjualan
                 @else Dashboard Admin @endif
@@ -348,6 +371,9 @@
                             <span class="adm-badge {{ $order->payment_method === 'cash' ? 'badge-cash' : ($order->payment_method === 'bank' ? 'badge-bank' : 'badge-digital') }}">
                                 {{ ['cash'=>'COD','bank'=>'Bank','digital'=>'Digital'][$order->payment_method] }}
                             </span>
+                            @if($order->payment_proof)
+                            <a href="{{ $order->payment_proof }}" target="_blank" style="display:block; margin-top:6px; font-size:11px; color:#3b82f6; text-decoration:underline;">Lihat Bukti</a>
+                            @endif
                         </td>
                         <td>
                             <b>Rp {{ number_format($order->total,0,',','.') }}</b>
@@ -549,6 +575,93 @@
                 @else
                 <p style="color:#94a3b8;text-align:center;padding:30px">Belum ada kurir. Tambahkan dari menu Kelola Menu.</p>
                 @endif
+            </div>
+
+            {{-- ===================== SECTION: VOUCHERS ===================== --}}
+            @elseif($navSection === 'vouchers')
+            <div style="display:grid;grid-template-columns:1.1fr 1.2fr;gap:18px;align-items:start">
+                <div class="adm-card" style="margin-bottom:0">
+                    <div class="adm-card-head"><div><div class="adm-card-title">Buat Voucher Baru</div><div class="adm-card-sub">Atur promo untuk pelanggan.</div></div></div>
+                    <form method="POST" action="{{ route('admin.vouchers.store') }}">
+                        @csrf
+                        <div class="adm-form-grid">
+                            <div class="adm-form-group"><label>Kode Voucher</label><input name="kode_voucher" placeholder="SAVE50" required></div>
+                            <div class="adm-form-group"><label>Jenis Potongan</label>
+                                <select name="jenis_potongan" required>
+                                    <option value="nominal">Nominal</option>
+                                    <option value="persen">Persen</option>
+                                </select>
+                            </div>
+                            <div class="adm-form-group"><label>Nilai Potongan</label><input name="nilai_potongan" type="number" min="1" placeholder="5000" required></div>
+                            <div class="adm-form-group"><label>Minimal Belanja</label><input name="min_belanja" type="number" min="0" placeholder="50000" required></div>
+                            <div class="adm-form-group"><label>Kuota</label><input name="kuota" type="number" min="1" placeholder="10" required></div>
+                            <div class="adm-form-group"><label>Berakhir</label><input name="tanggal_berakhir" type="date" required></div>
+                        </div>
+                        <div class="adm-form-group" style="margin-bottom:12px">
+                            <label>Status</label>
+                            <select name="status" required>
+                                <option value="aktif">Aktif</option>
+                                <option value="nonaktif">Nonaktif</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Simpan Voucher</button>
+                    </form>
+                </div>
+                <div class="adm-card" style="margin-bottom:0">
+                    <div class="adm-card-head"><div><div class="adm-card-title">Daftar Voucher</div><div class="adm-card-sub">Promo aktif dan yang sudah dibuat.</div></div></div>
+                    @if($vouchers->count())
+                    <table class="adm-payout-table">
+                        <thead><tr><th>Kode</th><th>Diskon</th><th>Min</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach($vouchers as $voucher)
+                        <tr>
+                            <td><b>{{ $voucher->kode_voucher }}</b><div style="font-size:11px;color:#94a3b8">{{ $voucher->tanggal_berakhir ? \Carbon\Carbon::parse($voucher->tanggal_berakhir)->format('d/m/Y') : '-' }}</div></td>
+                            <td>{{ $voucher->jenis_potongan === 'persen' ? $voucher->nilai_potongan.'%' : 'Rp '.number_format($voucher->nilai_potongan,0,',','.') }}</td>
+                            <td>Rp {{ number_format($voucher->min_belanja,0,',','.') }}</td>
+                            <td>@if($voucher->status === 'aktif')<span class="adm-badge badge-ok">Aktif</span>@else<span class="adm-badge badge-wait">Nonaktif</span>@endif</td>
+                        </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                    @else
+                    <p style="color:#94a3b8;text-align:center;padding:30px">Belum ada voucher yang dibuat.</p>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ===================== SECTION: SETTINGS ===================== --}}
+            @elseif($navSection === 'settings')
+            <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start">
+                <div class="adm-card" style="margin-bottom:0">
+                    <div class="adm-card-head"><div><div class="adm-card-title">Pengaturan Toko</div><div class="adm-card-sub">Atur jam buka dan status operasional.</div></div></div>
+                    <form method="POST" action="{{ route('admin.settings.store') }}">
+                        @csrf
+                        <div class="adm-form-grid">
+                            <div class="adm-form-group">
+                                <label>Status Toko</label>
+                                <select name="status_toko" required>
+                                    <option value="buka" {{ ($shopSettings->status_toko ?? 'buka') === 'buka' ? 'selected' : '' }}>Buka</option>
+                                    <option value="tutup" {{ ($shopSettings->status_toko ?? 'buka') === 'tutup' ? 'selected' : '' }}>Tutup</option>
+                                </select>
+                            </div>
+                            <div class="adm-form-group"><label>Jam Buka</label><input type="time" name="jam_buka" value="{{ $shopSettings->jam_buka ?? '08:00' }}" required></div>
+                            <div class="adm-form-group"><label>Jam Tutup</label><input type="time" name="jam_tutup" value="{{ $shopSettings->jam_tutup ?? '21:00' }}" required></div>
+                        </div>
+                        <button type="submit" class="btn-primary">Simpan Pengaturan</button>
+                    </form>
+                </div>
+                <div class="adm-card" style="margin-bottom:0">
+                    <div class="adm-card-head"><div><div class="adm-card-title">Status Saat Ini</div><div class="adm-card-sub">Informasi yang tampil di halaman pembeli.</div></div></div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div style="padding:14px 16px;border-radius:10px;background:{{ ($shopSettings->status_toko ?? 'buka') === 'buka' ? '#ecfdf5' : '#fef2f2' }};border:1px solid {{ ($shopSettings->status_toko ?? 'buka') === 'buka' ? '#a7f3d0' : '#fecaca' }};color:{{ ($shopSettings->status_toko ?? 'buka') === 'buka' ? '#065f46' : '#991b1b' }};font-weight:700">
+                            {{ ($shopSettings->status_toko ?? 'buka') === 'buka' ? 'Toko sedang buka' : 'Toko sedang tutup' }}
+                        </div>
+                        <div style="padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;color:#475569;line-height:1.7">
+                            <div><strong>Jam Operasional:</strong> {{ $shopSettings->jam_buka ?? '08:00' }} - {{ $shopSettings->jam_tutup ?? '21:00' }}</div>
+                            <div style="margin-top:6px"><strong>Update Terakhir:</strong> {{ $shopSettings->updated_at ? $shopSettings->updated_at->format('d/m/Y H:i') : '-' }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- ===================== SECTION: REPORTS ===================== --}}

@@ -9,6 +9,9 @@ use App\Models\OrderItem;
 use App\Models\MenuItem;
 use App\Models\Courier;
 use App\Models\CourierPayout;
+use App\Models\PengaturanToko;
+use App\Models\PencairanKurir;
+use App\Models\Voucher;
 
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', function () {
@@ -31,7 +34,117 @@ Route::middleware('guest')->group(function () {
             'email' => 'Email atau password tidak sesuai.',
         ])->onlyInput('email');
     })->name('admin.login.submit');
+
 });
+
+Route::middleware('auth')->get('/admin/register', function () {
+    return view('register');
+})->name('register');
+
+Route::middleware('auth')->post('/admin/register', function (Request $request) {
+    $data = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'password' => ['required', 'string', 'min:8', 'confirmed'],
+    ]);
+
+    \App\Models\User::create([
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+    ]);
+
+    return redirect('/admin')->with('success', 'Admin baru berhasil didaftarkan.');
+})->name('admin.register.submit');
+
+Route::middleware('auth')->post('/admin/settings', function (Request $request) {
+    $data = $request->validate([
+        'status_toko' => ['required', 'in:buka,tutup'],
+        'jam_buka' => ['required', 'date_format:H:i'],
+        'jam_tutup' => ['required', 'date_format:H:i'],
+    ]);
+
+    PengaturanToko::updateOrCreate([], $data);
+
+    return back()->with('success', 'Pengaturan toko berhasil diperbarui.');
+})->name('admin.settings.store');
+
+Route::middleware('auth')->post('/admin/vouchers', function (Request $request) {
+    $data = $request->validate([
+        'kode_voucher' => ['required', 'string', 'max:30', 'unique:voucher,kode_voucher'],
+        'jenis_potongan' => ['required', 'in:nominal,persen'],
+        'nilai_potongan' => ['required', 'integer', 'min:1'],
+        'min_belanja' => ['required', 'integer', 'min:0'],
+        'tanggal_berakhir' => ['required', 'date'],
+        'kuota' => ['required', 'integer', 'min:1'],
+        'status' => ['required', 'in:aktif,nonaktif'],
+    ]);
+
+    Voucher::create([
+        'kode_voucher' => strtoupper(trim($data['kode_voucher'])),
+        'jenis_potongan' => $data['jenis_potongan'],
+        'nilai_potongan' => $data['nilai_potongan'],
+        'min_belanja' => $data['min_belanja'],
+        'tanggal_berakhir' => $data['tanggal_berakhir'],
+        'kuota' => $data['kuota'],
+        'status' => $data['status'],
+    ]);
+
+    return back()->with('success', 'Voucher berhasil ditambahkan.');
+})->name('admin.vouchers.store');
+
+Route::post('/voucher/check', function (Request $request) {
+    $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
+    $subtotal = (int) $request->input('subtotal', 0);
+
+    if ($voucherCode === '') {
+        return response()->json(['valid' => false, 'message' => 'Kode voucher wajib diisi.'], 422);
+    }
+
+    $voucher = Voucher::where('kode_voucher', $voucherCode)->first();
+    if (!$voucher) {
+        return response()->json(['valid' => false, 'message' => 'Kode voucher tidak ditemukan.'], 422);
+    }
+
+    if ($voucher->status !== 'aktif') {
+        return response()->json(['valid' => false, 'message' => 'Voucher tidak aktif saat ini.'], 422);
+    }
+
+    if ($voucher->tanggal_berakhir && now()->toDateString() > $voucher->tanggal_berakhir) {
+        return response()->json(['valid' => false, 'message' => 'Voucher sudah kedaluwarsa.'], 422);
+    }
+
+    if ($subtotal < $voucher->min_belanja) {
+        return response()->json([
+            'valid' => false,
+            'message' => 'Subtotal belum mencapai minimal belanja Rp ' . number_format($voucher->min_belanja, 0, ',', '.'),
+        ], 422);
+    }
+
+    $discount = $voucher->jenis_potongan === 'persen'
+        ? (int) floor($subtotal * ($voucher->nilai_potongan / 100))
+        : (int) $voucher->nilai_potongan;
+
+    $request->session()->put('applied_voucher', [
+        'kode_voucher' => $voucher->kode_voucher,
+        'discount_amount' => $discount,
+        'jenis_potongan' => $voucher->jenis_potongan,
+        'nilai_potongan' => $voucher->nilai_potongan,
+    ]);
+
+    return response()->json([
+        'valid' => true,
+        'message' => 'Voucher berhasil digunakan.',
+        'discount_amount' => $discount,
+        'kode_voucher' => $voucher->kode_voucher,
+    ]);
+})->name('voucher.check');
+
+Route::post('/voucher/clear', function (Request $request) {
+    $request->session()->forget('applied_voucher');
+
+    return response()->json(['valid' => false, 'message' => 'Voucher dibatalkan.']);
+})->name('voucher.clear');
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
@@ -42,28 +155,78 @@ Route::post('/logout', function (Request $request) {
 })->middleware('auth')->name('logout');
 
 Route::any('/', function () {
-    $screen = request()->query('screen', 'home');
+    $screenParam = request()->query('screen', 'home');
+    $screen = in_array($screenParam, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback', 'track'], true) ? $screenParam : 'home';
     $category = request()->query('category');
+    
     $sessionOrder = session('order');
     $order = $sessionOrder && isset($sessionOrder['order_code'])
         ? Order::where('order_code', $sessionOrder['order_code'])->first()?->toArray()
         : null;
 
-    return view('foodie', [
-        'screen' => in_array($screen, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback'], true)
-            ? $screen
-            : 'home',
-        'order' => $order,
-        'category' => $category,
-        'managedMenu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
+    $shopSettings = PengaturanToko::latest()->first() ?? PengaturanToko::create([
+        'status_toko' => 'buka',
+        'jam_buka' => '08:00',
+        'jam_tutup' => '21:00',
     ]);
+
+    $shopOpen = ($shopSettings->status_toko === 'buka');
+    if ($shopOpen && $shopSettings->jam_buka && $shopSettings->jam_tutup) {
+        $nowTime = \Carbon\Carbon::now()->format('H:i');
+        $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
+    }
+
+    $managedMenu = MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get();
+    
+    $menu = [];
+    foreach ($managedMenu as $managedItem) {
+        $menu[$managedItem->id] = [
+            $managedItem->name, 
+            'Rp ' . number_format($managedItem->price, 0, ',', '.'), 
+            $managedItem->price, 
+            $managedItem->image_url ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=85', 
+            $managedItem->category
+        ];
+    }
+    
+    $visibleMenu = $category ? collect($menu)->filter(fn ($item) => $item[4] === $category)->all() : $menu;
+    
+    $cart = session('cart', []);
+    $cartCount = array_sum($cart);
+    $buyer = session('buyer', []);
+    
+    $subtotal = 0;
+    foreach ($cart as $itemId => $quantity) {
+        $subtotal += ($menu[$itemId][2] ?? 0) * $quantity;
+    }
+    
+    $delivery = $subtotal > 0 ? 1000 : 0;
+    $voucher = session('applied_voucher', []);
+    $voucherDiscount = (int) ($voucher['discount_amount'] ?? 0);
+    $grandTotal = max($subtotal + $delivery - $voucherDiscount, 0);
+    $total = $subtotal + $delivery;
+
+    $screens = ['home' => 'Beranda', 'cart' => 'Keranjang', 'status' => 'Status Pesanan', 'feedback' => 'Kritik dan Saran', 'track' => 'Lacak Pesanan'];
+
+    // Track order logic
+    $trackedOrder = null;
+    $trackCode = request()->query('order_code');
+    if ($trackCode) {
+        $trackedOrder = Order::where('order_code', $trackCode)->orWhere('phone', $trackCode)->first()?->toArray();
+    }
+
+    return view('foodie', compact(
+        'screens', 'screen', 'category', 'menu', 'cart', 'buyer', 
+        'subtotal', 'delivery', 'voucher', 'voucherDiscount', 'grandTotal', 
+        'shopSettings', 'shopOpen', 'total', 'visibleMenu', 'cartCount', 'order', 'managedMenu', 'trackedOrder', 'trackCode'
+    ));
 });
 
 Route::get('/cart/add/{item}', function (int $item) {
     $cart = session('cart', []);
     $cart[$item] = ($cart[$item] ?? 0) + 1;
     session(['cart' => $cart]);
-    return redirect()->to('/?screen=home');
+    return redirect()->to('/?screen=home#menu-section');
 })->whereNumber('item');
 
 Route::get('/cart/remove/{item}', function (int $item) {
@@ -123,6 +286,23 @@ Route::post('/checkout/payment', function (Request $request) {
     return redirect()->to('/?screen=confirmation');
 })->name('checkout.payment');
 
+Route::post('/checkout/proof', function (Request $request) {
+    $data = $request->validate([
+        'order_code' => ['required', 'string'],
+        'payment_proof' => ['required', 'image', 'max:5120'],
+    ]);
+
+    $order = Order::where('order_code', $data['order_code'])->firstOrFail();
+    $path = $request->file('payment_proof')->store('proofs', 'public');
+    
+    $order->update([
+        'payment_proof' => asset('storage/' . $path),
+        'status' => 'waiting_owner'
+    ]);
+
+    return redirect()->to('/?screen=track&order_code=' . $order->order_code)->with('success', 'Bukti pembayaran berhasil diunggah.');
+})->name('checkout.proof');
+
 Route::middleware('auth')->get('/admin', function () {
     $status = request()->query('status');
     $orders = Order::latest()
@@ -134,6 +314,12 @@ Route::middleware('auth')->get('/admin', function () {
     $couriers = Courier::withCount('orders')->orderBy('name')->get();
     $payouts = CourierPayout::with('courier')->latest()->get();
     $managedMenu = MenuItem::orderBy('category')->get();
+    $vouchers = Voucher::latest()->get();
+    $shopSettings = PengaturanToko::latest()->first() ?? PengaturanToko::create([
+        'status_toko' => 'buka',
+        'jam_buka' => '08:00',
+        'jam_tutup' => '21:00',
+    ]);
     $reportFrom = request()->query('from', now()->startOfMonth()->toDateString());
     $reportTo = request()->query('to', now()->toDateString());
     try {
@@ -150,10 +336,15 @@ Route::middleware('auth')->get('/admin', function () {
         ->whereBetween('created_at', [$reportFromDate, $reportToDate])
         ->latest()
         ->get();
-    $reportRevenue = $reportOrders->sum('total');
+
+    $reportFoodRevenue = $reportOrders->sum(function ($order) {
+        $base = max(0, (int) $order->total - 1000);
+        return $base;
+    });
     $reportDelivery = $reportOrders->count() * 1000;
     $reportPayouts = CourierPayout::whereBetween('created_at', [$reportFromDate, $reportToDate])->sum('amount');
-    $reportProfit = $reportRevenue - $reportPayouts;
+    $reportProfit = $reportFoodRevenue + $reportDelivery - $reportPayouts;
+    $reportRevenue = $reportFoodRevenue + $reportDelivery;
     $bestSellingMenus = OrderItem::whereHas('order', function ($query) use ($reportFromDate, $reportToDate) {
             $query->whereIn('status', ['completed', 'confirmed'])
                 ->whereBetween('created_at', [$reportFromDate, $reportToDate]);
@@ -164,7 +355,7 @@ Route::middleware('auth')->get('/admin', function () {
         ->limit(10)
         ->get();
 
-    return view('admin', compact('orders', 'status', 'couriers', 'payouts', 'managedMenu', 'reportFrom', 'reportTo', 'reportOrders', 'reportRevenue', 'reportDelivery', 'reportPayouts', 'reportProfit', 'bestSellingMenus'));
+    return view('admin', compact('orders', 'status', 'couriers', 'payouts', 'managedMenu', 'vouchers', 'shopSettings', 'reportFrom', 'reportTo', 'reportOrders', 'reportRevenue', 'reportFoodRevenue', 'reportDelivery', 'reportPayouts', 'reportProfit', 'bestSellingMenus'));
 })->name('admin.dashboard');
 
 Route::post('/feedback/whatsapp', function (Request $request) {
@@ -286,14 +477,22 @@ Route::middleware('auth')->patch('/admin/orders/{order}/complete', function (Ord
 })->name('admin.orders.complete');
 
 Route::middleware('auth')->post('/admin/payouts', function (Request $request) {
-    CourierPayout::create($request->validate([
-        'courier_id' => 'required|exists:couriers,id',
-        'amount' => 'required|integer|min:1',
-        'period' => 'required|string|max:80',
-        'notes' => 'nullable|string|max:255',
-    ]));
+    $courier = Courier::findOrFail($request->input('courier_id'));
+    $completedCount = Order::where('courier_id', $courier->id)
+        ->whereIn('status', ['completed', 'confirmed'])
+        ->count();
 
-    return back()->with('success', 'Pencairan kurir berhasil dibuat.');
+    $amount = (int) $request->input('amount', $completedCount * 2000);
+
+    CourierPayout::create([
+        'courier_id' => $courier->id,
+        'amount' => $amount,
+        'period' => $request->input('period', now()->format('F Y')),
+        'status' => 'pending',
+        'notes' => $request->input('notes', 'Pencairan otomatis dari pesanan selesai.'),
+    ]);
+
+    return back()->with('success', 'Pencairan kurir berhasil dibuat untuk ' . $courier->name . ' sebesar Rp ' . number_format($amount, 0, ',', '.') . '.');
 })->name('admin.payouts.store');
 
 Route::middleware('auth')->delete('/admin/payouts', function () {
