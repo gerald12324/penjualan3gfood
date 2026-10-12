@@ -360,6 +360,9 @@
                         </td>
                         <td>
                             <b>{{ $order->customer_name }}</b>
+                            @if($order->customer)
+                                <span style="display:inline-block; font-size:10px; background:#dcfce7; color:#166534; padding:1px 6px; border-radius:99px; margin-left:4px; font-weight:600;">Member: {{ $order->customer->email }}</span>
+                            @endif
                             <div style="font-size:11px;color:#64748b;margin-top:2px">{{ $order->phone }}</div>
                             <div style="font-size:11px;color:#94a3b8">{{ Str::limit($order->address, 40) }}</div>
                             <a class="btn-wa" target="_blank" href="https://wa.me/{{ preg_replace('/\D+/', '', $order->phone) }}?text={{ urlencode($msg) }}">
@@ -611,7 +614,7 @@
                     <div class="adm-card-head"><div><div class="adm-card-title">Daftar Voucher</div><div class="adm-card-sub">Promo aktif dan yang sudah dibuat.</div></div></div>
                     @if($vouchers->count())
                     <table class="adm-payout-table">
-                        <thead><tr><th>Kode</th><th>Diskon</th><th>Min</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Kode</th><th>Diskon</th><th>Min</th><th>Status</th><th>Aksi</th></tr></thead>
                         <tbody>
                         @foreach($vouchers as $voucher)
                         <tr>
@@ -619,6 +622,12 @@
                             <td>{{ $voucher->jenis_potongan === 'persen' ? $voucher->nilai_potongan.'%' : 'Rp '.number_format($voucher->nilai_potongan,0,',','.') }}</td>
                             <td>Rp {{ number_format($voucher->min_belanja,0,',','.') }}</td>
                             <td>@if($voucher->status === 'aktif')<span class="adm-badge badge-ok">Aktif</span>@else<span class="adm-badge badge-wait">Nonaktif</span>@endif</td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.vouchers.delete', $voucher) }}" onsubmit="return confirm('Hapus voucher ini?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn-danger" type="submit" style="padding:4px 8px;font-size:11px">Hapus</button>
+                                </form>
+                            </td>
                         </tr>
                         @endforeach
                         </tbody>

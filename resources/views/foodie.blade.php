@@ -33,24 +33,64 @@
             <a href="{{ url('/?screen=feedback') }}" class="{{ $screen === 'feedback' ? 'text-[#e50027]' : 'hover:text-[#e50027] transition-colors' }}">Contact</a>
         </div>
 
-        <!-- Icons & Phone -->
-        <div class="flex items-center gap-6">
-            <a href="#" class="text-gray-800 hover:text-[#e50027] transition-colors"><i class="fas fa-search text-lg"></i></a>
-            <a href="{{ url('/?screen=cart') }}" class="relative text-gray-800 hover:text-[#e50027] transition-colors">
+        <!-- Icons, Cart & Customer Auth -->
+        <div class="flex items-center gap-4 md:gap-5">
+            <a href="{{ url('/?screen=cart') }}" class="relative text-gray-800 hover:text-[#e50027] transition-colors p-1">
                 <i class="fas fa-shopping-bag text-lg"></i>
                 @if($cartCount > 0)
-                <span class="absolute -top-2 -right-2 flex items-center justify-center w-[18px] h-[18px] text-[10px] font-bold text-white bg-[#e50027] border-2 border-white rounded-full">{{ $cartCount }}</span>
+                <span class="absolute -top-1 -right-2 flex items-center justify-center w-[18px] h-[18px] text-[10px] font-bold text-white bg-[#e50027] border-2 border-white rounded-full">{{ $cartCount }}</span>
                 @endif
             </a>
-            <a href="tel:+11234567890" class="hidden md:flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-[#e50027] rounded-full hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
-                <i class="fas fa-phone-alt"></i> +1 123 456 7890
-            </a>
+
+            <!-- Customer Account Area (Khusus Informasi Akun) -->
+            <div class="pl-3 border-l border-gray-200">
+                @if($currentCustomer)
+                    <!-- State: Logged In -> Tombol Khusus Informasi Akun -->
+                    <button type="button" 
+                            onclick="openAccountModal()" 
+                            id="btn-account-info" 
+                            class="flex items-center gap-2.5 py-1.5 px-3.5 rounded-full border border-gray-200 hover:border-[#e50027] bg-white hover:bg-red-50/60 transition-all shadow-sm cursor-pointer group active:scale-95" 
+                            title="Klik untuk Informasi Akun">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#e50027] to-[#ff4d6d] text-white flex items-center justify-center text-xs font-extrabold shadow-sm shadow-red-200">
+                            {{ strtoupper(substr($currentCustomer->name, 0, 1)) }}
+                        </div>
+                        <div class="text-left hidden sm:block">
+                            <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block leading-none">Informasi Akun</span>
+                            <span class="text-xs font-bold text-gray-800 max-w-[110px] md:max-w-[140px] truncate block leading-tight mt-0.5 group-hover:text-[#e50027] transition-colors">
+                                {{ $currentCustomer->name }}
+                            </span>
+                        </div>
+                        <i class="fas fa-id-card text-xs text-gray-400 group-hover:text-[#e50027] transition-colors ml-0.5"></i>
+                    </button>
+                @else
+                    <!-- State: Guest (Akun Pengguna) -->
+                    <a href="{{ route('customer.login') }}" class="flex items-center gap-2 py-1.5 px-3.5 rounded-full border border-gray-200 hover:border-[#e50027] bg-white hover:bg-red-50/60 transition-all shadow-sm group" title="Buka Akun Pembeli">
+                        <div class="w-7 h-7 rounded-full bg-red-50 group-hover:bg-[#e50027] text-[#e50027] group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="text-xs font-bold text-gray-800 group-hover:text-[#e50027] transition-colors leading-tight">
+                            Masuk
+                        </span>
+                    </a>
+                @endif
+            </div>
         </div>
     </nav>
 
     <!-- Main Wrapper -->
     <main class="pt-[88px] min-h-screen">
         
+        @if(session('success'))
+            <div class="max-w-7xl mx-auto px-6 mt-4">
+                <div class="p-4 text-sm text-green-800 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-between shadow-sm" role="alert">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                        <span class="font-medium">{{ session('success') }}</span>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if(!$shopOpen)
             <div class="max-w-7xl mx-auto px-6 mt-6">
                 <div class="p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-yellow-50" role="alert">
@@ -203,6 +243,27 @@
                 @elseif($screen === 'buyer')
                     <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50">
                         <h2 class="text-2xl font-bold mb-6 text-center">Delivery Details</h2>
+
+                        @if($currentCustomer)
+                            <div class="mb-6 p-4 rounded-2xl bg-green-50 border border-green-200 text-green-900 text-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fas fa-check-circle text-green-600 text-base"></i>
+                                    <span>Pemesanan akan otomatis terhubung ke akun: <strong>{{ $currentCustomer->name }}</strong> ({{ $currentCustomer->email }})</span>
+                                </div>
+                                <span class="bg-green-200 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">Terhubung</span>
+                            </div>
+                        @else
+                            <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fas fa-info-circle text-amber-600 text-base"></i>
+                                    <span>Ingin riwayat pesanan tersimpan di akun Anda?</span>
+                                </div>
+                                <a href="{{ route('customer.login') }}" class="font-bold text-[#e50027] hover:underline shrink-0">
+                                    Masuk / Daftar &rarr;
+                                </a>
+                            </div>
+                        @endif
+
                         <form class="space-y-5" method="POST" action="{{ route('checkout.buyer') }}">
                             @csrf
                             <div>
@@ -213,9 +274,27 @@
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
                                 <input type="text" name="phone" value="{{ old('phone', $buyer['phone'] ?? '') }}" required placeholder="08xx-xxxx-xxxx" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
                             </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Perumahan</label>
+                                    <input type="text" name="perumahan" required placeholder="Nama Perumahan" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Blok</label>
+                                    <input type="text" name="blok" required placeholder="Contoh: A2" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tahap (Opsional)</label>
+                                    <input type="text" name="tahap" placeholder="Contoh: 3" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">RT / RW (Opsional)</label>
+                                    <input type="text" name="rt_rw" placeholder="01/02" class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
+                                </div>
+                            </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Delivery Address</label>
-                                <textarea name="address" required placeholder="Full address..." class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm min-h-[120px]">{{ old('address', $buyer['address'] ?? '') }}</textarea>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Catatan Tambahan (Opsional)</label>
+                                <textarea name="catatan" placeholder="Contoh: Sambal dibanyakin, jangan pedas, dll..." class="w-full bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm min-h-[80px]"></textarea>
                             </div>
                             @if($errors->any())<p class="text-red-500 text-sm font-medium">{{ $errors->first() }}</p>@endif
                             <button type="submit" class="w-full bg-[#e50027] text-white font-bold py-4 rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-200 mt-4">Continue to Payment <i class="fas fa-arrow-right ml-2"></i></button>
@@ -320,6 +399,46 @@
                     </div>
                 @elseif($screen === 'track' || $screen === 'status')
                     <div class="max-w-2xl mx-auto bg-white rounded-3xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50">
+
+                        @if($currentCustomer && $customerOrders->isNotEmpty() && !$trackCode)
+                            <div class="mb-8">
+                                <h4 class="font-bold text-sm text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <i class="fas fa-history text-[#e50027]"></i> Riwayat Pesanan Saya ({{ $currentCustomer->name }})
+                                </h4>
+                                <div class="space-y-3">
+                                    @foreach($customerOrders as $cOrder)
+                                        <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-gray-100/80 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                            <div>
+                                                <span class="font-bold text-gray-900">#{{ $cOrder->order_code }}</span>
+                                                <span class="text-xs text-gray-400 block">{{ $cOrder->created_at->format('d M Y H:i') }}</span>
+                                                <span class="text-xs font-semibold text-gray-700">Rp {{ number_format($cOrder->total, 0, ',', '.') }} &bull; {{ strtoupper($cOrder->payment_method) }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                                <span class="px-3 py-1 rounded-full text-xs font-bold 
+                                                    {{ in_array($cOrder->status, ['completed', 'confirmed']) ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800' }}">
+                                                    {{ match($cOrder->status) {
+                                                        'waiting', 'waiting_owner', 'waiting_payment' => 'Menunggu Konfirmasi',
+                                                        'accepted' => 'Diterima',
+                                                        'cooking' => 'Sedang Dimasak',
+                                                        'ready_to_deliver' => 'Siap Diantar',
+                                                        'delivering' => 'Sedang Diantar',
+                                                        'completed', 'confirmed' => 'Selesai',
+                                                        default => $cOrder->status
+                                                    } }}
+                                                </span>
+                                                <a href="{{ url('/?screen=track&order_code=' . $cOrder->order_code) }}" class="text-xs font-bold text-[#e50027] hover:underline flex items-center gap-1">
+                                                    Lacak <i class="fas fa-chevron-right text-[10px]"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                                    Atau cari pesanan dengan memasukkan Kode Pesanan di bawah:
+                                </div>
+                            </div>
+                        @endif
+
                         <form method="GET" action="{{ url('/') }}" class="flex flex-col sm:flex-row gap-4 mb-8">
                             <input type="hidden" name="screen" value="track">
                             <input type="text" name="order_code" value="{{ request('order_code', $order['order_code'] ?? '') }}" required placeholder="Enter Order ID or WhatsApp..." class="flex-1 bg-[#f4f5f7] border-0 rounded-xl px-5 py-4 focus:ring-2 focus:ring-[#e50027] outline-none transition-all text-sm">
@@ -428,7 +547,138 @@
         </div>
     </footer>
 
+    <!-- Modal Khusus Informasi Akun Pelanggan -->
+    @if($currentCustomer)
+    <div id="accountModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity cursor-pointer" onclick="closeAccountModal()"></div>
+
+        <!-- Modal Dialog Box -->
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto z-10 border border-gray-100 transform transition-all my-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <!-- Modal Header Background -->
+            <div class="relative bg-gradient-to-br from-[#800015] via-[#b80020] to-[#e50027] px-6 pt-5 pb-11 text-white text-center">
+                <!-- Close Button -->
+                <button type="button" onclick="closeAccountModal()" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer z-20" title="Tutup">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+
+                <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 text-[10px] font-semibold backdrop-blur-sm mb-1.5 text-white">
+                    <i class="fas fa-shield-alt text-amber-300"></i> Akun Pelanggan 3GFood
+                </div>
+                <h3 class="text-lg font-black font-heading tracking-wide">INFORMASI AKUN</h3>
+                <p class="text-[11px] text-red-100/90">Detail identitas & status keanggotaan Anda</p>
+            </div>
+
+            <!-- Profile Info Body -->
+            <div class="relative px-6 pb-5 pt-0">
+                <!-- Floating Avatar -->
+                <div class="-mt-9 flex flex-col items-center">
+                    <div class="w-18 h-18 rounded-full bg-white p-1 shadow-lg ring-4 ring-white/90">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#e50027] to-[#ff4d6d] text-white flex items-center justify-center text-2xl font-black shadow-inner">
+                            {{ strtoupper(substr($currentCustomer->name, 0, 1)) }}
+                        </div>
+                    </div>
+                    <h4 class="text-base font-bold text-gray-900 mt-2 text-center">{{ $currentCustomer->name }}</h4>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Member Aktif 3GFood
+                    </span>
+                </div>
+
+                <!-- Account Information Rows -->
+                <div class="mt-4 space-y-2">
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50 border border-gray-100">
+                        <div class="w-8 h-8 rounded-xl bg-red-100/80 text-[#e50027] flex items-center justify-center text-xs shrink-0">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Email Terdaftar</p>
+                            <p class="text-xs font-bold text-gray-800 truncate">{{ $currentCustomer->email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50 border border-gray-100">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-xs shrink-0">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Nomor Handphone / WhatsApp</p>
+                            <p class="text-xs font-bold text-gray-800 truncate">{{ $currentCustomer->phone ?: 'Belum diisi (opsional)' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50 border border-gray-100">
+                        <div class="w-8 h-8 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center text-xs shrink-0">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Bergabung Sejak</p>
+                            <p class="text-xs font-bold text-gray-800 truncate">{{ $currentCustomer->created_at ? $currentCustomer->created_at->translatedFormat('d F Y') : '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistic Cards -->
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                    <div class="p-2.5 rounded-2xl bg-red-50/60 border border-red-100 text-center">
+                        <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Total Pesanan</p>
+                        <p class="text-base font-black text-[#e50027] mt-0.5">{{ $customerOrders->count() }} <span class="text-[11px] font-semibold text-gray-500">kali</span></p>
+                    </div>
+                    <div class="p-2.5 rounded-2xl bg-amber-50/60 border border-amber-100 text-center">
+                        <p class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Akses Portal</p>
+                        <p class="text-xs font-bold text-amber-800 mt-0.5">Akun Pelanggan</p>
+                    </div>
+                </div>
+
+                <!-- Navigation & Action Buttons -->
+                <div class="mt-5 space-y-2">
+                    <a href="{{ url('/?screen=track') }}" class="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-gray-100 hover:bg-red-50 hover:text-[#e50027] text-gray-700 text-xs font-bold transition">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fas fa-receipt text-[#e50027]"></i> Riwayat & Lacak Pesanan
+                        </span>
+                        <i class="fas fa-chevron-right text-[10px] text-gray-400"></i>
+                    </a>
+
+                    <form action="{{ route('customer.logout') }}" method="POST" class="pt-1">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm shadow-red-200 cursor-pointer">
+                            <i class="fas fa-sign-out-alt"></i> Keluar dari Akun (Logout)
+                        </button>
+                    </form>
+
+                    <button type="button" onclick="closeAccountModal()" class="w-full flex items-center justify-center px-4 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
 <script>
+  function openAccountModal() {
+    const modal = document.getElementById('accountModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeAccountModal() {
+    const modal = document.getElementById('accountModal');
+    if (modal) {
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeAccountModal();
+    }
+  });
+
   (function(){
     const voucherForm = document.getElementById('voucher-form');
     if (!voucherForm) return;

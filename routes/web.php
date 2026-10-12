@@ -12,6 +12,27 @@ use App\Models\CourierPayout;
 use App\Models\PengaturanToko;
 use App\Models\PencairanKurir;
 use App\Models\Voucher;
+use App\Models\Customer;
+use App\Http\Controllers\CustomerAuthController;
+
+/*
+|--------------------------------------------------------------------------
+| Autentikasi Khusus Pelanggan / Customer (Guard: customer)
+|--------------------------------------------------------------------------
+*/
+Route::get('/customer/login', [CustomerAuthController::class, 'showLoginForm'])->name('customer.login');
+Route::post('/customer/login', [CustomerAuthController::class, 'login'])->name('customer.login.submit');
+Route::get('/customer/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
+Route::post('/customer/register', [CustomerAuthController::class, 'register'])->name('customer.register.submit');
+Route::post('/customer/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
+
+Route::get('/home', function () {
+    return redirect('/admin');
+});
+
+Route::get('/login', function () {
+    return redirect('/admin/login');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', function () {
@@ -93,6 +114,11 @@ Route::middleware('auth')->post('/admin/vouchers', function (Request $request) {
     return back()->with('success', 'Voucher berhasil ditambahkan.');
 })->name('admin.vouchers.store');
 
+Route::middleware('auth')->delete('/admin/vouchers/{voucher}', function (\App\Models\Voucher $voucher) {
+    $voucher->delete();
+    return back()->with('success', 'Voucher berhasil dihapus.');
+})->name('admin.vouchers.delete');
+
 Route::post('/voucher/check', function (Request $request) {
     $voucherCode = strtoupper(trim((string) $request->input('voucher_code', '')));
     $subtotal = (int) $request->input('subtotal', 0);
@@ -154,158 +180,196 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
-Route::any('/', function () {
-    $screenParam = request()->query('screen', 'home');
-    $screen = in_array($screenParam, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback', 'track'], true) ? $screenParam : 'home';
-    $category = request()->query('category');
-    
-    $sessionOrder = session('order');
-    $order = $sessionOrder && isset($sessionOrder['order_code'])
-        ? Order::where('order_code', $sessionOrder['order_code'])->first()?->toArray()
-        : null;
+/*
+|--------------------------------------------------------------------------
+| Area Pelanggan / Front Store (Wajib Login Pembeli Terlebih Dahulu)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:customer')->group(function () {
+    Route::any('/', function () {
+        $screenParam = request()->query('screen', 'home');
+        $screen = in_array($screenParam, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback', 'track'], true) ? $screenParam : 'home';
+        $category = request()->query('category');
+        
+        $sessionOrder = session('order');
+        $order = $sessionOrder && isset($sessionOrder['order_code'])
+            ? Order::where('order_code', $sessionOrder['order_code'])->first()?->toArray()
+            : null;
 
-    $shopSettings = PengaturanToko::latest()->first() ?? PengaturanToko::create([
-        'status_toko' => 'buka',
-        'jam_buka' => '08:00',
-        'jam_tutup' => '21:00',
-    ]);
+        $shopSettings = PengaturanToko::latest()->first() ?? PengaturanToko::create([
+            'status_toko' => 'buka',
+            'jam_buka' => '08:00',
+            'jam_tutup' => '21:00',
+        ]);
 
-    $shopOpen = ($shopSettings->status_toko === 'buka');
-    if ($shopOpen && $shopSettings->jam_buka && $shopSettings->jam_tutup) {
-        $nowTime = \Carbon\Carbon::now()->format('H:i');
-        $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
-    }
-
-    $managedMenu = MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get();
-    
-    $menu = [];
-    foreach ($managedMenu as $managedItem) {
-        $menu[$managedItem->id] = [
-            $managedItem->name, 
-            'Rp ' . number_format($managedItem->price, 0, ',', '.'), 
-            $managedItem->price, 
-            $managedItem->image_url ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=85', 
-            $managedItem->category
-        ];
-    }
-    
-    $visibleMenu = $category ? collect($menu)->filter(fn ($item) => $item[4] === $category)->all() : $menu;
-    
-    $cart = session('cart', []);
-    $cartCount = array_sum($cart);
-    $buyer = session('buyer', []);
-    
-    $subtotal = 0;
-    foreach ($cart as $itemId => $quantity) {
-        $subtotal += ($menu[$itemId][2] ?? 0) * $quantity;
-    }
-    
-    $delivery = $subtotal > 0 ? 1000 : 0;
-    $voucher = session('applied_voucher', []);
-    $voucherDiscount = (int) ($voucher['discount_amount'] ?? 0);
-    $grandTotal = max($subtotal + $delivery - $voucherDiscount, 0);
-    $total = $subtotal + $delivery;
-
-    $screens = ['home' => 'Beranda', 'cart' => 'Keranjang', 'status' => 'Status Pesanan', 'feedback' => 'Kritik dan Saran', 'track' => 'Lacak Pesanan'];
-
-    // Track order logic
-    $trackedOrder = null;
-    $trackCode = request()->query('order_code');
-    if ($trackCode) {
-        $trackedOrder = Order::where('order_code', $trackCode)->orWhere('phone', $trackCode)->first()?->toArray();
-    }
-
-    return view('foodie', compact(
-        'screens', 'screen', 'category', 'menu', 'cart', 'buyer', 
-        'subtotal', 'delivery', 'voucher', 'voucherDiscount', 'grandTotal', 
-        'shopSettings', 'shopOpen', 'total', 'visibleMenu', 'cartCount', 'order', 'managedMenu', 'trackedOrder', 'trackCode'
-    ));
-});
-
-Route::get('/cart/add/{item}', function (int $item) {
-    $cart = session('cart', []);
-    $cart[$item] = ($cart[$item] ?? 0) + 1;
-    session(['cart' => $cart]);
-    return redirect()->to('/?screen=home#menu-section');
-})->whereNumber('item');
-
-Route::get('/cart/remove/{item}', function (int $item) {
-    $cart = session('cart', []);
-    unset($cart[$item]);
-    session(['cart' => $cart]);
-
-    return redirect()->to('/?screen=cart');
-})->whereNumber('item');
-
-Route::get('/cart/clear', function () {
-    session()->forget('cart');
-
-    return redirect()->to('/?screen=cart');
-});
-
-Route::post('/checkout/buyer', function (Request $request) {
-    $data = $request->validate([
-        'customer_name' => ['required', 'string', 'max:120'],
-        'phone' => ['required', 'string', 'max:30'],
-        'address' => ['required', 'string', 'max:500'],
-    ]);
-    session(['buyer' => $data]);
-    return redirect()->to('/?screen=payment');
-})->name('checkout.buyer');
-
-Route::post('/checkout/payment', function (Request $request) {
-    $method = $request->validate(['payment_method' => ['required', 'in:cash,bank,digital']])['payment_method'];
-    $buyer = session('buyer');
-    abort_unless($buyer, 302, 'Data pembeli belum diisi.');
-    $subtotal = 0;
-    foreach (session('cart', []) as $itemId => $quantity) {
-        $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
-        $subtotal += ($menuItem?->price ?? 0) * $quantity;
-    }
-    abort_unless($subtotal > 0, 302, 'Keranjang masih kosong.');
-    $order = Order::create([
-        ...$buyer,
-        'order_code' => 'FE-' . now()->format('ymdHis'),
-        'payment_method' => $method,
-        'total' => $subtotal + 1000,
-        'status' => 'waiting',
-    ]);
-    foreach (session('cart', []) as $itemId => $quantity) {
-        $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
-        if ($menuItem) {
-            $order->items()->create([
-                'menu_item_id' => $menuItem->id,
-                'menu_name' => $menuItem->name,
-                'unit_price' => $menuItem->price,
-                'quantity' => $quantity,
-            ]);
+        $shopOpen = ($shopSettings->status_toko === 'buka');
+        if ($shopOpen && $shopSettings->jam_buka && $shopSettings->jam_tutup) {
+            $nowTime = \Carbon\Carbon::now()->format('H:i');
+            $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
         }
-    }
-    session(['order' => $order->fresh()->toArray()]);
-    session()->forget('cart');
-    return redirect()->to('/?screen=confirmation');
-})->name('checkout.payment');
 
-Route::post('/checkout/proof', function (Request $request) {
-    $data = $request->validate([
-        'order_code' => ['required', 'string'],
-        'payment_proof' => ['required', 'image', 'max:5120'],
-    ]);
+        $managedMenu = MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get();
+        
+        $menu = [];
+        foreach ($managedMenu as $managedItem) {
+            $menu[$managedItem->id] = [
+                $managedItem->name, 
+                'Rp ' . number_format($managedItem->price, 0, ',', '.'), 
+                $managedItem->price, 
+                $managedItem->image_url ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=85', 
+                $managedItem->category
+            ];
+        }
+        
+        $visibleMenu = $category ? collect($menu)->filter(fn ($item) => $item[4] === $category)->all() : $menu;
+        
+        $cart = session('cart', []);
+        $cartCount = array_sum($cart);
+        $buyer = session('buyer', []);
+        
+        $subtotal = 0;
+        foreach ($cart as $itemId => $quantity) {
+            $subtotal += ($menu[$itemId][2] ?? 0) * $quantity;
+        }
+        
+        $delivery = $subtotal > 0 ? 1000 : 0;
+        $voucher = session('applied_voucher', []);
+        $voucherDiscount = (int) ($voucher['discount_amount'] ?? 0);
+        $grandTotal = max($subtotal + $delivery - $voucherDiscount, 0);
+        $total = $subtotal + $delivery;
 
-    $order = Order::where('order_code', $data['order_code'])->firstOrFail();
-    $path = $request->file('payment_proof')->store('proofs', 'public');
-    
-    $order->update([
-        'payment_proof' => asset('storage/' . $path),
-        'status' => 'waiting_owner'
-    ]);
+        $currentCustomer = Auth::guard('customer')->user();
+        if (empty($buyer) && $currentCustomer) {
+            $buyer = [
+                'customer_name' => $currentCustomer->name,
+                'phone' => $currentCustomer->phone ?? '',
+                'address' => '',
+            ];
+        }
 
-    return redirect()->to('/?screen=track&order_code=' . $order->order_code)->with('success', 'Bukti pembayaran berhasil diunggah.');
-})->name('checkout.proof');
+        $screens = ['home' => 'Beranda', 'cart' => 'Keranjang', 'status' => 'Status Pesanan', 'feedback' => 'Kritik dan Saran', 'track' => 'Lacak Pesanan'];
+
+        // Track order logic
+        $trackedOrder = null;
+        $customerOrders = $currentCustomer ? Order::with('items')->where('customer_id', $currentCustomer->id)->latest()->get() : collect();
+        $trackCode = request()->query('order_code');
+        if ($trackCode) {
+            $trackedOrder = Order::where('order_code', $trackCode)->orWhere('phone', $trackCode)->first()?->toArray();
+        }
+
+        return view('foodie', compact(
+            'screens', 'screen', 'category', 'menu', 'cart', 'buyer', 
+            'subtotal', 'delivery', 'voucher', 'voucherDiscount', 'grandTotal', 
+            'shopSettings', 'shopOpen', 'total', 'visibleMenu', 'cartCount', 'order', 'managedMenu', 'trackedOrder', 'trackCode',
+            'currentCustomer', 'customerOrders'
+        ));
+    });
+
+    Route::get('/cart/add/{item}', function (int $item) {
+        $cart = session('cart', []);
+        $cart[$item] = ($cart[$item] ?? 0) + 1;
+        session(['cart' => $cart]);
+        return redirect()->to('/?screen=home#menu-section');
+    })->whereNumber('item');
+
+    Route::get('/cart/remove/{item}', function (int $item) {
+        $cart = session('cart', []);
+        unset($cart[$item]);
+        session(['cart' => $cart]);
+
+        return redirect()->to('/?screen=cart');
+    })->whereNumber('item');
+
+    Route::get('/cart/clear', function () {
+        session()->forget('cart');
+
+        return redirect()->to('/?screen=cart');
+    });
+
+    Route::post('/checkout/buyer', function (Request $request) {
+        $data = $request->validate([
+            'customer_name' => ['required', 'string', 'max:120'],
+            'phone' => ['required', 'string', 'max:30'],
+            'perumahan' => ['required', 'string', 'max:100'],
+            'blok' => ['required', 'string', 'max:20'],
+            'tahap' => ['nullable', 'string', 'max:20'],
+            'rt_rw' => ['nullable', 'string', 'max:20'],
+            'catatan' => ['nullable', 'string', 'max:200'],
+        ]);
+        
+        $fullAddress = "Perumahan " . $data['perumahan'] . " Blok " . $data['blok'];
+        if (!empty($data['tahap'])) $fullAddress .= " Tahap " . $data['tahap'];
+        if (!empty($data['rt_rw'])) $fullAddress .= " RT/RW " . $data['rt_rw'];
+        if (!empty($data['catatan'])) $fullAddress .= " | Catatan: " . $data['catatan'];
+
+        session(['buyer' => [
+            'customer_name' => $data['customer_name'],
+            'phone' => $data['phone'],
+            'address' => $fullAddress
+        ]]);
+        return redirect()->to('/?screen=payment');
+    })->name('checkout.buyer');
+
+    Route::post('/checkout/payment', function (Request $request) {
+        $method = $request->validate(['payment_method' => ['required', 'in:cash,bank,digital']])['payment_method'];
+        $buyer = session('buyer');
+        abort_unless($buyer, 302, 'Data pembeli belum diisi.');
+        $subtotal = 0;
+        foreach (session('cart', []) as $itemId => $quantity) {
+            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
+            $subtotal += ($menuItem?->price ?? 0) * $quantity;
+        }
+        abort_unless($subtotal > 0, 302, 'Keranjang masih kosong.');
+        
+        // Simpan pesanan dengan mengikat customer_id jika pembeli sedang login
+        $customerId = Auth::guard('customer')->id();
+
+        $order = Order::create([
+            ...$buyer,
+            'customer_id' => $customerId,
+            'order_code' => 'FE-' . now()->format('ymdHis'),
+            'payment_method' => $method,
+            'total' => $subtotal + 1000,
+            'status' => 'waiting',
+        ]);
+        foreach (session('cart', []) as $itemId => $quantity) {
+            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
+            if ($menuItem) {
+                $order->items()->create([
+                    'menu_item_id' => $menuItem->id,
+                    'menu_name' => $menuItem->name,
+                    'unit_price' => $menuItem->price,
+                    'quantity' => $quantity,
+                ]);
+            }
+        }
+        session(['order' => $order->fresh()->toArray()]);
+        session()->forget('cart');
+        return redirect()->to('/?screen=confirmation');
+    })->name('checkout.payment');
+
+    Route::post('/checkout/proof', function (Request $request) {
+        $data = $request->validate([
+            'order_code' => ['required', 'string'],
+            'payment_proof' => ['required', 'image', 'max:5120'],
+        ]);
+
+        $order = Order::where('order_code', $data['order_code'])->firstOrFail();
+        $path = $request->file('payment_proof')->store('proofs', 'public');
+        
+        $order->update([
+            'payment_proof' => asset('storage/' . $path),
+            'status' => 'waiting_owner'
+        ]);
+
+        return redirect()->to('/?screen=track&order_code=' . $order->order_code)->with('success', 'Bukti pembayaran berhasil diunggah.');
+    })->name('checkout.proof');
+});
 
 Route::middleware('auth')->get('/admin', function () {
     $status = request()->query('status');
-    $orders = Order::latest()
+    $orders = Order::with(['items', 'customer'])
+        ->latest()
         ->when(in_array($status, ['waiting', 'accepted', 'cooking', 'ready_to_deliver', 'delivering', 'completed'], true), function ($query) use ($status) {
             return $query->where('status', $status);
         })

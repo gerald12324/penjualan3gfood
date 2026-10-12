@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
-        'order_code', 'customer_name', 'phone', 'address',
-        'payment_method', 'total', 'status', 'courier_id',
+        'customer_id', 'order_code', 'customer_name', 'phone', 'address',
+        'payment_method', 'payment_proof', 'total', 'status', 'courier_id',
         'accepted_at', 'cooking_at', 'cooked_at', 'delivering_at', 'completed_at',
     ];
 
@@ -19,6 +19,11 @@ class Order extends Model
         'delivering_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function courier()
     {
