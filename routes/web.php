@@ -230,7 +230,7 @@ Route::any('/', function () {
             $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
         }
 
-        $managedMenu = MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get();
+        $managedMenu = MenuItem::where('is_available', true)->where('is_visible', true)->orderBy('category')->orderBy('name')->get();
         
         $menu = [];
         foreach ($managedMenu as $managedItem) {
@@ -296,6 +296,17 @@ Route::any('/', function () {
     });
 
     Route::match(['get', 'post'], '/cart/add/{item}', function (Request $request, int $item) {
+        $menuItem = MenuItem::where('id', $item)->where('is_available', true)->where('is_visible', true)->first();
+        if (!$menuItem) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Menu tidak tersedia atau sedang disembunyikan.',
+                ], 404);
+            }
+            return redirect()->to('/?screen=home')->with('error', 'Menu tidak tersedia atau sedang disembunyikan.');
+        }
+
         $cart = session('cart', []);
         $cart[$item] = ($cart[$item] ?? 0) + 1;
         session(['cart' => $cart]);
@@ -371,7 +382,7 @@ Route::any('/', function () {
         abort_unless($buyer, 302, 'Data pembeli belum diisi.');
         $subtotal = 0;
         foreach (session('cart', []) as $itemId => $quantity) {
-            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
+            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->where('is_visible', true)->first();
             $subtotal += ($menuItem?->price ?? 0) * $quantity;
         }
         abort_unless($subtotal > 0, 302, 'Keranjang masih kosong.');
@@ -388,7 +399,7 @@ Route::any('/', function () {
             'status' => 'waiting',
         ]);
         foreach (session('cart', []) as $itemId => $quantity) {
-            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->first();
+            $menuItem = MenuItem::where('id', $itemId)->where('is_available', true)->where('is_visible', true)->first();
             if ($menuItem) {
                 $order->items()->create([
                     'menu_item_id' => $menuItem->id,
@@ -511,9 +522,11 @@ Route::middleware('auth')->post('/admin/menu', function (Request $request) {
         'price' => 'required|integer|min:0',
         'description' => 'nullable|string',
         'is_available' => 'nullable|boolean',
+        'is_visible' => 'nullable|boolean',
         'image' => 'nullable|image|max:2048',
     ]);
     $data['is_available'] = $request->boolean('is_available', true);
+    $data['is_visible'] = $request->boolean('is_visible', true);
     $imagePath = $request->file('image')?->store('menu', 'public');
     $data['image_url'] = $imagePath ? asset('storage/' . $imagePath) : null;
     unset($data['image']);
@@ -651,9 +664,11 @@ Route::middleware('auth')->patch('/admin/menu/{menu}', function (Request $reques
         'price' => 'required|integer|min:0',
         'description' => 'nullable|string',
         'is_available' => 'nullable|boolean',
+        'is_visible' => 'nullable|boolean',
         'image' => 'nullable|image|max:2048',
     ]);
     $data['is_available'] = $request->boolean('is_available', $menu->is_available);
+    $data['is_visible'] = $request->boolean('is_visible', $menu->is_visible);
     if ($request->file('image')) {
         $imagePath = $request->file('image')->store('menu', 'public');
         $data['image_url'] = asset('storage/' . $imagePath);
@@ -663,6 +678,25 @@ Route::middleware('auth')->patch('/admin/menu/{menu}', function (Request $reques
     Cache::forget('managed_menu_active');
     return back()->with('success', 'Menu berhasil diupdate.');
 })->name('admin.menu.update');
+
+Route::middleware('auth')->patch('/admin/menu/{menu}/toggle-visibility', function (Request $request, MenuItem $menu) {
+    $menu->is_visible = !$menu->is_visible;
+    $menu->save();
+    Cache::forget('managed_menu_active');
+
+    $statusLabel = $menu->is_visible ? 'ditampilkan' : 'disembunyikan';
+    $message = "Menu \"{$menu->name}\" berhasil {$statusLabel} " . ($menu->is_visible ? 'di' : 'dari') . ' etalase pembeli.';
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'is_visible' => $menu->is_visible,
+            'message' => $message,
+        ]);
+    }
+
+    return back()->with('success', $message);
+})->name('admin.menu.toggle-visibility');
 
 Route::middleware('auth')->delete('/admin/menu/{menu}', function (MenuItem $menu) {
     $menu->delete();

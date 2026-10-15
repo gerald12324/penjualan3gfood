@@ -66,9 +66,8 @@
         .ic-purple{background:#f5f3ff}.ic-purple svg{stroke:#8b5cf6}
         .ic-red{background:#fef2f2}.ic-red svg{stroke:#ef4444}
 
-        /* === SECTION CARDS === */
-        .adm-card{background:#f4ece1;border-radius:16px;padding:28px;box-shadow:0 1px 3px rgba(40,20,10,.04);border:1px solid #d5c7b2;margin-bottom:24px}
-        .adm-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+        .adm-card{background:#f4ece1;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(40,20,10,.04);border:1px solid #d5c7b2;margin-bottom:24px;box-sizing:border-box;min-width:0;overflow:hidden}
+        .adm-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
         .adm-card-title{font:800 18px 'Outfit',sans-serif;color:#1c1917}
         .adm-card-sub{font-size:13px;color:#786d5e;margin-top:4px}
 
@@ -113,13 +112,16 @@
         .btn-paid{padding:6px 12px;background:#22c55e;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px}
 
         /* === FORMS === */
-        .adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-        .adm-form-group{display:flex;flex-direction:column;gap:8px}
-        .adm-form-group label{font-size:12px;font-weight:600;color:#6e6153;text-transform:uppercase;letter-spacing:0.5px}
-        .adm-form-group input,.adm-form-group select,.adm-form-group textarea{padding:12px 14px;border:1px solid #d5c7b2;border-radius:10px;font-size:14px;background:#e5dbcb;transition:all .2s;color:#1c1917}
+        .adm-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px;width:100%;box-sizing:border-box}
+        .adm-form-group{display:flex;flex-direction:column;gap:6px;min-width:0;width:100%;box-sizing:border-box}
+        .adm-form-group label{font-size:11px;font-weight:700;color:#6e6153;text-transform:uppercase;letter-spacing:0.5px}
+        .adm-form-group input,.adm-form-group select,.adm-form-group textarea{width:100%;max-width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d5c7b2;border-radius:10px;font-size:13px;background:#e5dbcb;transition:all .2s;color:#1c1917}
         .adm-form-group input:focus,.adm-form-group select:focus,.adm-form-group textarea:focus{outline:none;border-color:#e50027;box-shadow:0 0 0 3px rgba(229,0,39,.18);background:#f4ece1}
-        .adm-form-group textarea{min-height:100px;resize:vertical}
-        .adm-form-actions{display:flex;gap:10px;margin-top:20px}
+        .adm-form-group textarea{min-height:85px;resize:vertical}
+        .adm-form-group input[type="file"]{padding:7px 9px;font-size:11px;cursor:pointer;background:#ede3d6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .adm-form-group input[type="file"]::-webkit-file-upload-button{background:#1c1917;color:#fff;border:0;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;margin-right:6px;transition:background .2s}
+        .adm-form-group input[type="file"]::-webkit-file-upload-button:hover{background:#e50027}
+        .adm-form-actions{display:flex;gap:10px;margin-top:16px}
 
         /* === ACCORDION CATEGORIES === */
         .adm-cat-details{border:1px solid #d5c7b2;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 2px rgba(40,20,10,.02)}
@@ -296,9 +298,10 @@
 
         .adm-menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 18px;
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+            gap: 20px;
             margin-bottom: 22px;
+            align-items: start;
         }
 
         @media(max-width: 991px) {
@@ -348,6 +351,9 @@
             }
         }
         @media(max-width: 640px) {
+            .adm-form-grid {
+                grid-template-columns: 1fr;
+            }
             .adm-content {
                 padding: 16px 12px;
             }
@@ -725,6 +731,12 @@
                             <div class="adm-form-group"><label>Foto Menu</label><input name="image" type="file" accept="image/*"></div>
                         </div>
                         <div class="adm-form-group"><label>Deskripsi</label><input name="description" placeholder="Deskripsi singkat"></div>
+                        <div class="adm-form-group" style="margin-bottom:12px">
+                            <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13px;color:#1c1917">
+                                <input type="checkbox" name="is_visible" value="1" checked style="width:16px;height:16px;accent-color:#e50027">
+                                Tampilkan langsung di etalase toko (Visible)
+                            </label>
+                        </div>
                         <div class="adm-form-actions"><button type="submit" class="btn-primary">Simpan Menu</button></div>
                     </form>
                 </div>
@@ -742,12 +754,12 @@
                 <div class="adm-card-head">
                     <div>
                         <div class="adm-card-title">Kelola Menu</div>
-                        <div class="adm-card-sub">{{ $managedMenu->count() }} menu tersedia &bull; dikelompokkan per kategori</div>
+                        <div class="adm-card-sub">{{ $managedMenu->count() }} menu terdaftar &bull; dikelompokkan per kategori</div>
                     </div>
                 </div>
                 @if($managedMenu->count())
                     @foreach($menuByCategory as $cat => $items)
-                    <details class="adm-cat-details">
+                    <details class="adm-cat-details" open>
                         <summary class="adm-cat-summary">
                             <div class="adm-cat-icon">{{ $cat === 'Paket Nasi Liwet' ? '🍛' : ($cat === 'Lauk Utama' ? '🥘' : '🍟') }}</div>
                             {{ $cat }}
@@ -756,22 +768,75 @@
                         </summary>
                         <div class="adm-table-wrap">
                         <table class="adm-table">
-                            <thead><tr><th>Nama</th><th>Harga</th><th style="text-align:center">Aksi</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Harga</th>
+                                    <th style="text-align:center">Status Etalase</th>
+                                    <th style="text-align:center">Aksi</th>
+                                </tr>
+                            </thead>
                             <tbody>
                             @foreach($items as $item)
-                            <tr>
-                                <td><b>{{ $item->name }}</b>@if($item->description)<div style="font-size:11px;color:#94a3b8">{{ Str::limit($item->description, 50) }}</div>@endif</td>
+                            <tr id="menu-row-{{ $item->id }}" style="{{ !$item->is_visible ? 'opacity: 0.62; background: #fafafa;' : '' }}">
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:10px">
+                                        @if($item->image_url)
+                                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid #e2e8f0;flex-shrink:0">
+                                        @endif
+                                        <div>
+                                            <b id="menu-name-text-{{ $item->id }}" style="{{ !$item->is_visible ? 'color:#64748b' : '' }}">{{ $item->name }}</b>
+                                            @if($item->description)
+                                                <div style="font-size:11px;color:#94a3b8">{{ Str::limit($item->description, 50) }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
                                 <td style="color:#f97316;font-weight:700">Rp {{ number_format($item->price,0,',','.') }}</td>
                                 <td style="text-align:center">
-                                    <button class="btn-ghost" onclick="document.getElementById('edit-menu-{{ $item->id }}').style.display='block'">Edit</button>
-                                    <form method="POST" action="{{ route('admin.menu.delete', $item) }}" style="display:inline" onsubmit="return confirm('Hapus menu ini?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn-danger" type="submit">Hapus</button>
-                                    </form>
+                                    @if($item->is_visible)
+                                        <span id="menu-status-badge-{{ $item->id }}" style="display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;transition:all .25s ease">
+                                            <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span> Tampil
+                                        </span>
+                                    @else
+                                        <span id="menu-status-badge-{{ $item->id }}" style="display:inline-flex;align-items:center;gap:5px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;transition:all .25s ease">
+                                            <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block"></span> Tersembunyi
+                                        </span>
+                                    @endif
+                                </td>
+                                <td style="text-align:center">
+                                    <div style="display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap">
+                                        <!-- Tombol Hide / Show Visibility Toggle (AJAX Realtime: Tanpa Reload & Tanpa Scroll) -->
+                                        <form method="POST" action="{{ route('admin.menu.toggle-visibility', $item) }}" style="display:inline" onsubmit="toggleMenuVisibilityRealtime(event, this, {{ $item->id }})">
+                                            @csrf @method('PATCH')
+                                            @if($item->is_visible)
+                                                <button id="menu-toggle-btn-{{ $item->id }}" class="btn-ghost" type="submit" style="color:#d97706;border-color:#fcd34d;background:#fffbeb;padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border-radius:8px;font-weight:600;border:1px solid #fcd34d;transition:all .2s" title="Sembunyikan menu dari etalase pembeli">
+                                                    <i class="fas fa-eye-slash"></i> Sembunyikan
+                                                </button>
+                                            @else
+                                                <button id="menu-toggle-btn-{{ $item->id }}" class="btn-ghost" type="submit" style="color:#047857;border-color:#a7f3d0;background:#ecfdf5;padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border-radius:8px;font-weight:600;border:1px solid #a7f3d0;transition:all .2s" title="Tampilkan menu di etalase pembeli">
+                                                    <i class="fas fa-eye"></i> Tampilkan
+                                                </button>
+                                            @endif
+                                        </form>
+
+                                        <!-- Tombol Edit -->
+                                        <button class="btn-ghost" type="button" onclick="document.getElementById('edit-menu-{{ $item->id }}').style.display='table-row'" style="padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:4px">
+                                            <i class="fas fa-pen-to-square"></i> Edit
+                                        </button>
+
+                                        <!-- Tombol Hapus -->
+                                        <form method="POST" action="{{ route('admin.menu.delete', $item) }}" style="display:inline" onsubmit="return confirm('Hapus menu ini?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn-danger" type="submit" style="padding:5px 9px;font-size:11px;display:inline-flex;align-items:center;gap:4px">
+                                                <i class="fas fa-trash-can"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <tr id="edit-menu-{{ $item->id }}" style="display:none">
-                                <td colspan="3" style="padding:14px;background:#fafafa">
+                                <td colspan="4" style="padding:14px;background:#fafafa">
                                     <form method="POST" action="{{ route('admin.menu.update', $item) }}" enctype="multipart/form-data">
                                         @csrf @method('PATCH')
                                         <div class="adm-form-grid">
@@ -781,6 +846,12 @@
                                             <div class="adm-form-group"><label>Foto Baru</label><input name="image" type="file" accept="image/*"></div>
                                         </div>
                                         <div class="adm-form-group"><label>Deskripsi</label><textarea name="description">{{ $item->description }}</textarea></div>
+                                        <div class="adm-form-group" style="margin-top:6px;margin-bottom:12px">
+                                            <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13px;color:#1c1917">
+                                                <input type="checkbox" name="is_visible" value="1" {{ $item->is_visible ? 'checked' : '' }} style="width:16px;height:16px;accent-color:#e50027">
+                                                Tampilkan di etalase toko (Visible untuk pembeli)
+                                            </label>
+                                        </div>
                                         <div class="adm-form-actions">
                                             <button type="submit" class="btn-primary">Simpan Perubahan</button>
                                             <button type="button" class="btn-ghost" onclick="document.getElementById('edit-menu-{{ $item->id }}').style.display='none'">Batal</button>
@@ -1223,6 +1294,152 @@
       toast.style.transform = 'translateY(15px)';
       setTimeout(() => toast.remove(), 400);
     }, 7000);
+  }
+
+  // === REALTIME ACTION TOAST (MENU, VISIBILITY, ACTIONS) ===
+  function showRealtimeActionToast(message, type = 'success') {
+    let container = document.getElementById('admToastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'admToastContainer';
+      container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    const isSuccess = (type === 'success');
+    const icon = isSuccess ? '👁️' : '🙈';
+    const borderColor = isSuccess ? 'rgba(34, 197, 94, 0.4)' : 'rgba(234, 179, 8, 0.4)';
+    const iconBg = isSuccess ? '#15803d' : '#b45309';
+
+    toast.style.cssText = `pointer-events:auto;background:#1c1917;color:#fff;padding:12px 18px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,0.35);border:1px solid ${borderColor};display:flex;align-items:center;gap:12px;min-width:280px;max-width:380px;animation:admToastSlide 0.35s ease;`;
+    toast.innerHTML = `
+      <div style="width:34px;height:34px;border-radius:50%;background:${iconBg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+        ${icon}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:12px;color:#fff;">${isSuccess ? 'Status Etalase Aktif' : 'Status Etalase Disembunyikan'}</div>
+        <div style="font-size:12px;color:#d6d3d1;margin-top:2px;line-height:1.3;">
+          ${escapeAdminHtml(message)}
+        </div>
+      </div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(12px)';
+      setTimeout(() => toast.remove(), 350);
+    }, 3500);
+  }
+
+  // === REALTIME MENU VISIBILITY TOGGLE (ZERO RELOAD, ZERO SCROLL) ===
+  async function toggleMenuVisibilityRealtime(event, form, itemId) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const btn = form.querySelector('button[type="submit"]');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    const row = document.getElementById(`menu-row-${itemId}`);
+    const badge = document.getElementById(`menu-status-badge-${itemId}`);
+    const nameEl = document.getElementById(`menu-name-text-${itemId}`);
+
+    try {
+      const url = form.action;
+      const csrf = form.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: new URLSearchParams({
+          '_token': csrf,
+          '_method': 'PATCH'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          const isVisible = data.is_visible;
+
+          // 1. Update row appearance smoothly
+          if (row) {
+            row.style.transition = 'opacity 0.3s ease, background 0.3s ease';
+            if (!isVisible) {
+              row.style.opacity = '0.62';
+              row.style.background = '#fafafa';
+            } else {
+              row.style.opacity = '1';
+              row.style.background = '';
+            }
+          }
+
+          // 2. Update name text
+          if (nameEl) {
+            nameEl.style.color = isVisible ? '#1c1917' : '#64748b';
+          }
+
+          // 3. Update status badge
+          if (badge) {
+            badge.style.transition = 'all 0.25s ease';
+            if (isVisible) {
+              badge.style.background = '#ecfdf5';
+              badge.style.color = '#047857';
+              badge.style.borderColor = '#a7f3d0';
+              badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block"></span> Tampil';
+            } else {
+              badge.style.background = '#fef2f2';
+              badge.style.color = '#b91c1c';
+              badge.style.borderColor = '#fecaca';
+              badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block"></span> Tersembunyi';
+            }
+          }
+
+          // 4. Update the toggle button itself
+          if (btn) {
+            if (isVisible) {
+              btn.style.color = '#d97706';
+              btn.style.borderColor = '#fcd34d';
+              btn.style.background = '#fffbeb';
+              btn.title = 'Sembunyikan menu dari etalase pembeli';
+              btn.innerHTML = '<i class="fas fa-eye-slash"></i> Sembunyikan';
+            } else {
+              btn.style.color = '#047857';
+              btn.style.borderColor = '#a7f3d0';
+              btn.style.background = '#ecfdf5';
+              btn.title = 'Tampilkan menu di etalase pembeli';
+              btn.innerHTML = '<i class="fas fa-eye"></i> Tampilkan';
+            }
+          }
+
+          // 5. Update edit form checkbox if present
+          const editCheckbox = document.querySelector(`#edit-menu-${itemId} input[name="is_visible"]`);
+          if (editCheckbox) {
+            editCheckbox.checked = isVisible;
+          }
+
+          // 6. Show clean toast notification (NO RELOAD, NO SCROLL)
+          showRealtimeActionToast(data.message || (isVisible ? 'Menu berhasil ditampilkan di etalase.' : 'Menu berhasil disembunyikan dari etalase.'), isVisible ? 'success' : 'warning');
+        }
+      } else {
+        if (btn) btn.innerHTML = originalHtml;
+      }
+    } catch(err) {
+      console.error('Toggle visibility error:', err);
+      if (btn) btn.innerHTML = originalHtml;
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   // === REALTIME POLLING FOR ORDERS & METRICS ===
