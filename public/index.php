@@ -17,4 +17,13 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+if (isset($_SERVER['REQUEST_URI']) && str_starts_with($_SERVER['REQUEST_URI'], '/web_penjualan')) {
+    if ($_SERVER['REQUEST_URI'] === '/web_penjualan' || str_starts_with($_SERVER['REQUEST_URI'], '/web_penjualan?')) {
+        $_SERVER['REQUEST_URI'] = '/web_penjualan/' . substr($_SERVER['REQUEST_URI'], strlen('/web_penjualan'));
+    }
+    if (isset($_SERVER['SCRIPT_NAME']) && !str_starts_with($_SERVER['SCRIPT_NAME'], '/web_penjualan')) {
+        $_SERVER['SCRIPT_NAME'] = '/web_penjualan' . (str_starts_with($_SERVER['SCRIPT_NAME'], '/') ? '' : '/') . $_SERVER['SCRIPT_NAME'];
+    }
+}
+
 $app->handleRequest(Request::capture());

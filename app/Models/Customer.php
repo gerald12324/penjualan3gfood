@@ -22,6 +22,7 @@ class Customer extends Authenticatable
         'email',
         'password',
         'phone',
+        'avatar',
     ];
 
     /**
@@ -44,6 +45,20 @@ class Customer extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * URL foto profil customer
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+        return asset('storage/' . $this->avatar);
     }
 
     /**

@@ -26,7 +26,6 @@ class MenuFlowTest extends TestCase
             'is_available' => '1',
         ]);
 
-        dump($response->status(), $response->headers->get('Location', 'no-location'), session()->all());
 
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('menu_items', [
@@ -45,7 +44,8 @@ class MenuFlowTest extends TestCase
              ->post('/checkout/buyer', [
                  'customer_name' => 'Budi',
                  'phone' => '081234567890',
-                 'address' => 'Jl. Taman',
+                 'perumahan' => 'Graha Asri',
+                 'blok' => 'A1',
              ])
              ->assertRedirect('/?screen=payment');
 

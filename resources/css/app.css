@@ -5,10 +5,14 @@
     --font-heading: 'Outfit', ui-sans-serif, system-ui, sans-serif;
     
     --color-primary-red: #e50027;
-    --color-primary-yellow: #fdc52c;
-    --color-bg-light: #fdfbf7;
-    --color-bg-card: #f4f5f7;
-    --color-text-dark: #111111;
+    --color-primary-maroon: #780d20;
+    --color-primary-wine: #46040f;
+    --color-primary-light-red: #ff4d6d;
+    --color-bg-light: #ede5d8;
+    --color-bg-card: #f4ece1;
+    --color-bg-input: #e5dbcb;
+    --color-border-warm: #d5c7b2;
+    --color-text-dark: #1c1917;
 }
 
 body {
@@ -17,7 +21,7 @@ body {
 }
 
 .custom-curved-bg {
-    background-color: var(--color-primary-yellow);
+    background: radial-gradient(circle at center, #780d20 0%, #46040f 100%);
     border-radius: 40% 0 0 40% / 50% 0 0 50%;
 }
 

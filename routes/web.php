@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,6 +15,15 @@ use App\Models\PencairanKurir;
 use App\Models\Voucher;
 use App\Models\Customer;
 use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\ChatController;
+
+/*
+|--------------------------------------------------------------------------
+| Fitur Live Chat Pelanggan (Front Store)
+|--------------------------------------------------------------------------
+*/
+Route::get('/chat/messages', [ChatController::class, 'getCustomerMessages'])->name('chat.messages');
+Route::post('/chat/send', [ChatController::class, 'sendCustomerMessage'])->name('chat.send');
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +34,7 @@ Route::get('/customer/login', [CustomerAuthController::class, 'showLoginForm'])-
 Route::post('/customer/login', [CustomerAuthController::class, 'login'])->name('customer.login.submit');
 Route::get('/customer/register', [CustomerAuthController::class, 'showRegisterForm'])->name('customer.register');
 Route::post('/customer/register', [CustomerAuthController::class, 'register'])->name('customer.register.submit');
-Route::post('/customer/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
+Route::match(['get', 'post'], '/customer/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout');
 
 Route::get('/home', function () {
     return redirect('/admin');
@@ -58,22 +68,34 @@ Route::middleware('guest')->group(function () {
 
 });
 
-Route::middleware('auth')->get('/admin/register', function () {
+Route::get('/admin/register', function () {
+    if (\App\Models\User::count() > 0 && !\Illuminate\Support\Facades\Auth::check()) {
+        return redirect()->route('login')->withErrors(['email' => 'Hanya admin yang dapat mendaftarkan admin baru. Silakan login terlebih dahulu.']);
+    }
     return view('register');
 })->name('register');
 
-Route::middleware('auth')->post('/admin/register', function (Request $request) {
+Route::post('/admin/register', function (Request $request) {
+    if (\App\Models\User::count() > 0 && !\Illuminate\Support\Facades\Auth::check()) {
+        return redirect()->route('login')->withErrors(['email' => 'Hanya admin yang dapat mendaftarkan admin baru. Silakan login terlebih dahulu.']);
+    }
+
     $data = $request->validate([
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
         'password' => ['required', 'string', 'min:8', 'confirmed'],
     ]);
 
-    \App\Models\User::create([
+    $newUser = \App\Models\User::create([
         'name' => $data['name'],
         'email' => $data['email'],
         'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
     ]);
+
+    if (!\Illuminate\Support\Facades\Auth::check()) {
+        \Illuminate\Support\Facades\Auth::login($newUser);
+        return redirect('/admin')->with('success', 'Akun admin berhasil dibuat dan langsung login.');
+    }
 
     return redirect('/admin')->with('success', 'Admin baru berhasil didaftarkan.');
 })->name('admin.register.submit');
@@ -86,6 +108,7 @@ Route::middleware('auth')->post('/admin/settings', function (Request $request) {
     ]);
 
     PengaturanToko::updateOrCreate([], $data);
+    Cache::forget('shop_settings');
 
     return back()->with('success', 'Pengaturan toko berhasil diperbarui.');
 })->name('admin.settings.store');
@@ -182,13 +205,12 @@ Route::post('/logout', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| Area Pelanggan / Front Store (Wajib Login Pembeli Terlebih Dahulu)
+| Area Pelanggan / Front Store (Dapat Diakses Guest & Customer)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:customer')->group(function () {
-    Route::any('/', function () {
+Route::any('/', function () {
         $screenParam = request()->query('screen', 'home');
-        $screen = in_array($screenParam, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback', 'track'], true) ? $screenParam : 'home';
+        $screen = in_array($screenParam, ['home', 'cart', 'buyer', 'payment', 'confirmation', 'status', 'feedback', 'track', 'settings'], true) ? $screenParam : 'home';
         $category = request()->query('category');
         
         $sessionOrder = session('order');
@@ -196,15 +218,15 @@ Route::middleware('auth:customer')->group(function () {
             ? Order::where('order_code', $sessionOrder['order_code'])->first()?->toArray()
             : null;
 
-        $shopSettings = PengaturanToko::latest()->first() ?? PengaturanToko::create([
+        $shopSettings = PengaturanToko::latest()->first() ?? (object)[
             'status_toko' => 'buka',
             'jam_buka' => '08:00',
             'jam_tutup' => '21:00',
-        ]);
+        ];
 
         $shopOpen = ($shopSettings->status_toko === 'buka');
-        if ($shopOpen && $shopSettings->jam_buka && $shopSettings->jam_tutup) {
-            $nowTime = \Carbon\Carbon::now()->format('H:i');
+        if ($shopOpen && !empty($shopSettings->jam_buka) && !empty($shopSettings->jam_tutup)) {
+            $nowTime = date('H:i');
             $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
         }
 
@@ -247,14 +269,22 @@ Route::middleware('auth:customer')->group(function () {
             ];
         }
 
-        $screens = ['home' => 'Beranda', 'cart' => 'Keranjang', 'status' => 'Status Pesanan', 'feedback' => 'Kritik dan Saran', 'track' => 'Lacak Pesanan'];
+        $screens = [
+            'home' => 'Beranda',
+            'cart' => 'Keranjang',
+            'status' => 'Status Pesanan',
+            'feedback' => 'Kritik dan Saran',
+            'track' => 'Lacak Pesanan',
+            'settings' => 'Pengaturan Akun'
+        ];
 
         // Track order logic
         $trackedOrder = null;
         $customerOrders = $currentCustomer ? Order::with('items')->where('customer_id', $currentCustomer->id)->latest()->get() : collect();
         $trackCode = request()->query('order_code');
         if ($trackCode) {
-            $trackedOrder = Order::where('order_code', $trackCode)->orWhere('phone', $trackCode)->first()?->toArray();
+            $trackedOrderModel = Order::with(['items', 'courier'])->where('order_code', $trackCode)->orWhere('phone', $trackCode)->first();
+            $trackedOrder = $trackedOrderModel ? $trackedOrderModel->toArray() : null;
         }
 
         return view('foodie', compact(
@@ -265,23 +295,48 @@ Route::middleware('auth:customer')->group(function () {
         ));
     });
 
-    Route::get('/cart/add/{item}', function (int $item) {
+    Route::match(['get', 'post'], '/cart/add/{item}', function (Request $request, int $item) {
         $cart = session('cart', []);
         $cart[$item] = ($cart[$item] ?? 0) + 1;
         session(['cart' => $cart]);
-        return redirect()->to('/?screen=home#menu-section');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'cartCount' => array_sum($cart),
+                'message' => 'Item ditambahkan ke keranjang.',
+            ]);
+        }
+
+        return redirect()->to('/?screen=home');
     })->whereNumber('item');
 
-    Route::get('/cart/remove/{item}', function (int $item) {
+    Route::match(['get', 'post'], '/cart/remove/{item}', function (Request $request, int $item) {
         $cart = session('cart', []);
         unset($cart[$item]);
         session(['cart' => $cart]);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'cartCount' => array_sum($cart),
+                'message' => 'Item dihapus dari keranjang.',
+            ]);
+        }
+
         return redirect()->to('/?screen=cart');
     })->whereNumber('item');
 
-    Route::get('/cart/clear', function () {
+    Route::match(['get', 'post'], '/cart/clear', function (Request $request) {
         session()->forget('cart');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'cartCount' => 0,
+                'message' => 'Keranjang dikosongkan.',
+            ]);
+        }
 
         return redirect()->to('/?screen=cart');
     });
@@ -364,7 +419,11 @@ Route::middleware('auth:customer')->group(function () {
 
         return redirect()->to('/?screen=track&order_code=' . $order->order_code)->with('success', 'Bukti pembayaran berhasil diunggah.');
     })->name('checkout.proof');
-});
+
+    Route::middleware('auth:customer')->group(function () {
+        Route::post('/customer/settings', [CustomerAuthController::class, 'updateSettings'])->name('customer.settings.update');
+        Route::post('/customer/avatar/remove', [CustomerAuthController::class, 'removeAvatar'])->name('customer.avatar.remove');
+    });
 
 Route::middleware('auth')->get('/admin', function () {
     $status = request()->query('status');
@@ -427,9 +486,9 @@ Route::post('/feedback/whatsapp', function (Request $request) {
         'name' => ['required', 'string', 'max:120'],
         'message' => ['required', 'string', 'max:1000'],
     ]);
-    $adminPhone = \App\Services\WhatsAppService::normalizePhone(config('services.whatsapp.admin_phone', ''));
+    $adminPhone = \App\Services\WhatsAppService::normalizePhone(config('services.whatsapp.admin_phone', '6281234567890'));
     if (!$adminPhone) {
-        return back()->withErrors(['feedback' => 'Nomor WhatsApp admin belum dikonfigurasi.']);
+        $adminPhone = '6281234567890';
     }
     $message = "Halo Admin 3GFood, saya {$data['name']}.\n\nKritik dan saran:\n{$data['message']}";
     return redirect()->away('https://wa.me/'.$adminPhone.'?text='.rawurlencode($message));
@@ -459,6 +518,7 @@ Route::middleware('auth')->post('/admin/menu', function (Request $request) {
     $data['image_url'] = $imagePath ? asset('storage/' . $imagePath) : null;
     unset($data['image']);
     MenuItem::create($data);
+    Cache::forget('managed_menu_active');
     return back()->with('success', 'Menu berhasil ditambahkan.');
 })->name('admin.menu.store');
 
@@ -573,6 +633,7 @@ Route::middleware('auth')->patch('/admin/payouts/{payout}/paid', function (Couri
 })->name('admin.payouts.paid');
 
 Route::middleware('auth')->get('/admin/orders/{order}/receipt', function (Order $order) {
+    $order->load(['items', 'courier']);
     return view('receipt', compact('order'));
 })->name('admin.orders.receipt');
 
@@ -599,11 +660,13 @@ Route::middleware('auth')->patch('/admin/menu/{menu}', function (Request $reques
     }
     unset($data['image']);
     $menu->update($data);
+    Cache::forget('managed_menu_active');
     return back()->with('success', 'Menu berhasil diupdate.');
 })->name('admin.menu.update');
 
 Route::middleware('auth')->delete('/admin/menu/{menu}', function (MenuItem $menu) {
     $menu->delete();
+    Cache::forget('managed_menu_active');
     return back()->with('success', 'Menu berhasil dihapus.');
 })->name('admin.menu.delete');
 
@@ -616,3 +679,206 @@ Route::middleware('auth')->delete('/admin/couriers/{courier}', function (Courier
     $courier->delete();
     return back()->with('success', 'Kurir berhasil dihapus.');
 })->name('admin.couriers.delete');
+
+/*
+|--------------------------------------------------------------------------
+| Fitur Live Chat Admin (Dashboard)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/admin/chat/conversations', [ChatController::class, 'getAdminConversations'])->name('admin.chat.conversations');
+    Route::get('/admin/chat/thread/{key}', [ChatController::class, 'getAdminThread'])->name('admin.chat.thread');
+    Route::post('/admin/chat/reply', [ChatController::class, 'sendAdminReply'])->name('admin.chat.reply');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Real-Time Polling Dashboard Admin
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/admin/api/realtime-poll', function (Request $request) {
+        $lastOrderId = (int) $request->query('last_order_id', 0);
+        $currentMaxId = Order::max('id') ?? 0;
+        $hasNewOrder = ($lastOrderId > 0 && $currentMaxId > $lastOrderId);
+
+        $counts = [
+            'waiting' => Order::whereIn('status', ['waiting', 'waiting_owner', 'waiting_payment'])->count(),
+            'cooking' => Order::where('status', 'cooking')->count(),
+            'ready_to_deliver' => Order::where('status', 'ready_to_deliver')->count(),
+            'delivering' => Order::where('status', 'delivering')->count(),
+            'completed' => Order::whereIn('status', ['completed', 'confirmed'])->count(),
+            'total' => Order::count(),
+            'revenue' => (int) Order::whereIn('status', ['completed', 'confirmed'])->sum('total'),
+            'couriers' => Courier::count(),
+        ];
+        $counts['formatted_revenue'] = 'Rp ' . number_format($counts['revenue'], 0, ',', '.');
+
+        $chatUnread = \App\Models\ChatMessage::where('sender_type', 'customer')->where('is_read', false)->count();
+
+        // Ambil data pesanan terbaru untuk sync tabel realtime
+        $latestOrders = Order::with(['items', 'courier', 'customer'])
+            ->latest()
+            ->limit(25)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'order_code' => $order->order_code,
+                    'customer_name' => $order->customer_name,
+                    'phone' => $order->phone,
+                    'address' => $order->address,
+                    'total' => (int) $order->total,
+                    'total_formatted' => 'Rp ' . number_format($order->total, 0, ',', '.'),
+                    'status' => $order->status,
+                    'payment_method' => $order->payment_method,
+                    'payment_proof' => $order->payment_proof,
+                    'courier_id' => $order->courier_id,
+                    'courier_name' => $order->courier?->name,
+                    'courier_phone' => $order->courier?->phone,
+                    'created_at_formatted' => $order->created_at ? $order->created_at->format('d/m/Y H:i') : '-',
+                    'items_summary' => $order->items->map(fn ($it) => $it->quantity . 'x ' . $it->menu_name)->implode(', '),
+                ];
+            });
+
+        // Get new orders only (for toast notification)
+        $newOrders = [];
+        if ($hasNewOrder) {
+            $newOrders = Order::where('id', '>', $lastOrderId)
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(function ($order) {
+                    return [
+                        'id' => $order->id,
+                        'order_code' => $order->order_code,
+                        'customer_name' => $order->customer_name,
+                        'total' => (int) $order->total,
+                    ];
+                });
+        }
+
+        return response()->json([
+            'success' => true,
+            'has_new_order' => $hasNewOrder,
+            'last_order_id' => $currentMaxId,
+            'counts' => $counts,
+            'chat_unread' => $chatUnread,
+            'orders' => $newOrders,
+            'latest_orders' => $latestOrders,
+        ]);
+    })->name('admin.realtime.poll');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Real-Time Order Tracking & Status Check (Front Store)
+|--------------------------------------------------------------------------
+*/
+Route::get('/api/order/status/{order_code}', function ($orderCode) {
+    $order = Order::with(['courier', 'items'])
+        ->where('order_code', $orderCode)
+        ->orWhere('phone', $orderCode)
+        ->first();
+
+    if (!$order) {
+        return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+    }
+
+    $stepperMap = [
+        'waiting' => 1,
+        'waiting_owner' => 1,
+        'waiting_payment' => 1,
+        'accepted' => 2,
+        'cooking' => 3,
+        'ready_to_deliver' => 4,
+        'delivering' => 4,
+        'completed' => 5,
+        'confirmed' => 5,
+    ];
+
+    $labelMap = [
+        'waiting' => 'Menunggu Konfirmasi',
+        'waiting_owner' => 'Menunggu Verifikasi Pembayaran',
+        'waiting_payment' => 'Menunggu Pembayaran',
+        'accepted' => 'Pesanan Diterima & Disiapkan',
+        'cooking' => 'Sedang Dimasak oleh Koki',
+        'ready_to_deliver' => 'Pesanan Siap Diantar',
+        'delivering' => 'Sedang Diantar oleh Kurir',
+        'completed' => 'Pesanan Selesai / Terkirim',
+        'confirmed' => 'Pesanan Dikonfirmasi Selesai',
+    ];
+
+    $descMap = [
+        'waiting' => 'Pesanan Anda telah diterima sistem dan menunggu konfirmasi kasir/admin.',
+        'waiting_owner' => 'Bukti pembayaran sedang diverifikasi oleh admin toko.',
+        'waiting_payment' => 'Silakan lakukan pembayaran sesuai metode yang dipilih.',
+        'accepted' => 'Admin telah mengonfirmasi pesanan Anda dan segera diteruskan ke dapur.',
+        'cooking' => 'Dapur 3GFood sedang memasak hidangan lezat pesanan Anda dengan higienis.',
+        'ready_to_deliver' => 'Makanan sudah selesai dimasak dan dikemas, menunggu kurir berangkat.',
+        'delivering' => 'Kurir 3GFood sedang dalam perjalanan mengantarkan pesanan ke alamat Anda.',
+        'completed' => 'Pesanan telah berhasil diantar dan diterima. Selamat menikmati hidangan!',
+        'confirmed' => 'Pesanan telah selesai. Terima kasih telah mempercayai 3GFood!',
+    ];
+
+    return response()->json([
+        'success' => true,
+        'order' => [
+            'id' => $order->id,
+            'order_code' => $order->order_code,
+            'status' => $order->status,
+            'status_label' => $labelMap[$order->status] ?? $order->status,
+            'status_desc' => $descMap[$order->status] ?? '',
+            'step' => $stepperMap[$order->status] ?? 1,
+            'total' => (int) $order->total,
+            'total_formatted' => 'Rp ' . number_format($order->total, 0, ',', '.'),
+            'payment_method' => $order->payment_method,
+            'payment_proof' => $order->payment_proof,
+            'courier_name' => $order->courier?->name,
+            'courier_phone' => $order->courier?->phone,
+            'created_at' => $order->created_at?->format('d/m/Y H:i'),
+            'accepted_at' => $order->accepted_at?->format('H:i'),
+            'cooking_at' => $order->cooking_at?->format('H:i'),
+            'cooked_at' => $order->cooked_at?->format('H:i'),
+            'delivering_at' => $order->delivering_at?->format('H:i'),
+            'completed_at' => $order->completed_at?->format('H:i'),
+            'items_count' => $order->items->count(),
+            'items' => $order->items->map(function ($it) {
+                return [
+                    'name' => $it->menu_name,
+                    'quantity' => $it->quantity,
+                    'unit_price' => $it->unit_price,
+                    'total' => $it->quantity * $it->unit_price,
+                ];
+            }),
+        ],
+    ]);
+})->name('api.order.status');
+
+/*
+|--------------------------------------------------------------------------
+| Real-Time Toko Status Check
+|--------------------------------------------------------------------------
+*/
+Route::get('/api/store-status', function () {
+    $shopSettings = PengaturanToko::latest()->first() ?? (object)[
+        'status_toko' => 'buka',
+        'jam_buka' => '08:00',
+        'jam_tutup' => '21:00',
+    ];
+
+    $shopOpen = ($shopSettings->status_toko === 'buka');
+    if ($shopOpen && !empty($shopSettings->jam_buka) && !empty($shopSettings->jam_tutup)) {
+        $nowTime = date('H:i');
+        $shopOpen = $nowTime >= $shopSettings->jam_buka && $nowTime <= $shopSettings->jam_tutup;
+    }
+
+    return response()->json([
+        'success' => true,
+        'shop_open' => $shopOpen,
+        'status_toko' => $shopSettings->status_toko,
+        'jam_buka' => $shopSettings->jam_buka,
+        'jam_tutup' => $shopSettings->jam_tutup,
+        'current_time' => date('H:i'),
+    ]);
+})->name('api.store.status');
+
+
