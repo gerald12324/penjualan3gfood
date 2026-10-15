@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
-            if ($request->is('admin*')) {
+            if ($request->is('admin*') || $request->is('logout')) {
                 return route('login');
             }
             return route('customer.login');

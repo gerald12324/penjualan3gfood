@@ -195,13 +195,24 @@ Route::post('/voucher/clear', function (Request $request) {
     return response()->json(['valid' => false, 'message' => 'Voucher dibatalkan.']);
 })->name('voucher.clear');
 
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
+$adminLogoutHandler = function (Request $request) {
+    Auth::guard('web')->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return redirect()->route('login');
-})->middleware('auth')->name('logout');
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Anda telah berhasil keluar dari Dashboard Admin.',
+            'redirect' => route('login'),
+        ]);
+    }
+
+    return redirect()->route('login')->with('success', 'Anda telah berhasil keluar dari Dashboard Admin.');
+};
+
+Route::match(['get', 'post'], '/admin/logout', $adminLogoutHandler)->name('admin.logout');
+Route::match(['get', 'post'], '/logout', $adminLogoutHandler)->name('logout');
 
 /*
 |--------------------------------------------------------------------------

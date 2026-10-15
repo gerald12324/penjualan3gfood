@@ -35,8 +35,23 @@
         .adm-nav-link.active{font-weight:600;background:linear-gradient(to right, rgba(229,0,39,.22), transparent); border-left: 3px solid #e50027;}
         .adm-nav-badge{margin-left:auto;background:#e50027;color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:2px 8px;min-width:20px;text-align:center;box-shadow: 0 0 10px rgba(229,0,39,.45)}
         .adm-sidebar-footer{padding:20px 14px;border-top:1px solid rgba(255,255,255,.07)}
-        .adm-sidebar-footer form button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,.12);color:#f87171;border:0;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s}
-        .adm-sidebar-footer form button:hover{background:rgba(239,68,68,.22);color:#fca5a5}
+        .adm-sidebar-footer button,.adm-sidebar-footer form button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,.12);color:#f87171;border:0;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s;text-align:left}
+        .adm-sidebar-footer button:hover,.adm-sidebar-footer form button:hover{background:rgba(239,68,68,.22);color:#fca5a5}
+        .adm-topbar-logout-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(229,0,39,.1);color:#e50027;border:1px solid rgba(229,0,39,.25);border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+        .adm-topbar-logout-btn:hover{background:#e50027;color:#fff;box-shadow:0 4px 10px rgba(229,0,39,.25)}
+
+        /* === LOGOUT MODAL === */
+        .adm-logout-modal-backdrop{position:fixed;inset:0;background:rgba(15,2,4,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;animation:admFadeIn .2s ease}
+        @keyframes admFadeIn{from{opacity:0}to{opacity:1}}
+        .adm-logout-modal-card{background:radial-gradient(circle at top, #2d040a 0%, #170104 100%);border:1px solid rgba(255,255,255,0.14);border-radius:24px;max-width:420px;width:100%;padding:30px 24px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.65),0 0 40px rgba(229,0,39,0.18);color:#fff}
+        .adm-logout-modal-icon{width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg, rgba(229,0,39,0.22), rgba(179,0,26,0.1));border:1px solid rgba(229,0,39,0.4);color:#ff4d6d;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 20px rgba(229,0,39,0.25)}
+        .adm-logout-modal-title{font:800 20px 'Outfit',sans-serif;color:#fff;margin-bottom:8px;letter-spacing:-0.3px}
+        .adm-logout-modal-desc{font-size:13px;color:#fecdd3;line-height:1.6;margin-bottom:24px}
+        .adm-logout-modal-actions{display:flex;gap:12px;justify-content:center}
+        .adm-logout-btn-cancel{flex:1;padding:12px 16px;background:rgba(255,255,255,0.08);color:#cbd5e1;border:1px solid rgba(255,255,255,0.16);border-radius:12px;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s}
+        .adm-logout-btn-cancel:hover{background:rgba(255,255,255,0.15);color:#fff}
+        .adm-logout-btn-confirm{flex:1;padding:12px 16px;background:linear-gradient(135deg, #e50027, #b3001a);color:#fff;border:0;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 8px 20px rgba(229,0,39,0.4)}
+        .adm-logout-btn-confirm:hover{background:linear-gradient(135deg, #f0052d, #c20020);transform:translateY(-1px);box-shadow:0 12px 24px rgba(229,0,39,0.5)}
 
         /* === MAIN CONTENT === */
         .adm-main{flex:1;display:flex;flex-direction:column;min-width:0}
@@ -496,9 +511,9 @@
             </a>
         </nav>
         <div class="adm-sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
+            <form id="adminLogoutForm" method="POST" action="{{ route('admin.logout') }}">
                 @csrf
-                <button type="submit">
+                <button type="button" id="btnAdminSidebarLogout" onclick="openAdminLogoutModal(event)">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     <span>Keluar</span>
                 </button>
@@ -536,6 +551,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                     Lihat Toko
                 </a>
+                <button type="button" class="adm-topbar-logout-btn" onclick="openAdminLogoutModal(event)" title="Keluar dari Dashboard Admin">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Keluar</span>
+                </button>
             </div>
         </header>
 
@@ -1834,5 +1853,87 @@
     }, 3000);
     @endif
   });
+
+  /* === ADMIN LOGOUT MODAL & REALTIME HANDLER === */
+  function openAdminLogoutModal(e) {
+    if (e) e.preventDefault();
+    const modal = document.getElementById('adminLogoutModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeAdminLogoutModal() {
+    const modal = document.getElementById('adminLogoutModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  async function executeAdminLogout() {
+    const btn = document.getElementById('adminLogoutConfirmBtn');
+    const btnText = document.getElementById('adminLogoutBtnText');
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.75';
+      btn.style.cursor = 'wait';
+    }
+    if (btnText) {
+      btnText.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i> Mengeluarkan...';
+    }
+
+    try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+        || document.querySelector('#adminLogoutForm input[name="_token"]')?.value;
+
+      const res = await fetch("{{ route('admin.logout') }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrfToken || ''
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.location.href = data.redirect || "{{ route('login') }}";
+        return;
+      }
+    } catch (err) {
+      console.warn('AJAX logout fallback to standard submit:', err);
+    }
+
+    // Fallback: standard submit or redirect
+    const form = document.getElementById('adminLogoutForm');
+    if (form) {
+      form.submit();
+    } else {
+      window.location.href = "{{ route('admin.logout') }}";
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAdminLogoutModal();
+  });
 </script>
+
+<!-- MODAL KONFIRMASI LOGOUT ADMIN -->
+<div id="adminLogoutModal" class="adm-logout-modal-backdrop" onclick="if(event.target === this) closeAdminLogoutModal()">
+    <div class="adm-logout-modal-card">
+        <div class="adm-logout-modal-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <div class="adm-logout-modal-title">Konfirmasi Keluar</div>
+        <div class="adm-logout-modal-desc">Apakah Anda yakin ingin mengakhiri sesi dan keluar dari <strong>Dashboard Admin 3GFood</strong>?</div>
+        <div class="adm-logout-modal-actions">
+            <button type="button" class="adm-logout-btn-cancel" onclick="closeAdminLogoutModal()">Batal</button>
+            <button type="button" id="adminLogoutConfirmBtn" class="adm-logout-btn-confirm" onclick="executeAdminLogout()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span id="adminLogoutBtnText">Ya, Keluar</span>
+            </button>
+        </div>
+    </div>
+</div>
 </body>

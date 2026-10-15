@@ -151,6 +151,13 @@
             <p>Saveur & Tradition • Portal Dashboard Admin</p>
         </div>
 
+        @if(session('success'))
+        <div style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.35); color: #86efac; padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 22px; text-align: center; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fas fa-circle-check" style="color: #4ade80;"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+        @endif
+
         @if($errors->any())
         <div class="error-message">
             <i class="fas fa-circle-exclamation mr-1"></i> {{ $errors->first() }}
